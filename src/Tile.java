@@ -1,4 +1,13 @@
+import javafx.scene.image.Image;
 
-public class Tile extends GameObject {
+public abstract class Tile extends Renderable {
 
+	public Tile(Image texture) {
+		super(texture == null
+				? new Image(Renderable.class.getResource("/default.png")
+						.toExternalForm())
+				: texture);
+	}
+
+	public abstract void onDestroy();
 }

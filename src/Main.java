@@ -12,12 +12,24 @@ public class Main extends Application {
 	@Override
 	public void start(Stage stage) throws Exception {
 
+		stage.setWidth(960);
+		stage.setHeight(720);
+
 		VBox layout = new VBox();
-		GameCanvas canvas = new GameCanvas(stage);
+
+		GameState state = GameState.getInstance();
+		Player player = new Player();
+		GameCanvas canvas = new GameCanvas(stage, state, player);
+
+		GameLoop loop = new GameLoop(canvas, state);
+		loop.start();
+
 		layout.getChildren().add(canvas);
 		Scene scene = new Scene(layout);
 
-		stage.setFullScreen(true);
+		state.getInputManager().listen(scene);
+
+		stage.setFullScreen(false);
 
 		stage.setScene(scene);
 		stage.show();

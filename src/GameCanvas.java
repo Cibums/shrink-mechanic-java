@@ -1,7 +1,6 @@
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GameCanvas extends Canvas {
@@ -10,8 +9,10 @@ public class GameCanvas extends Canvas {
 	private double canvasHeight;
 
 	private GraphicsContext gc;
+	private GameState state;
+	private Player player;
 
-	public GameCanvas(Stage stage) {
+	public GameCanvas(Stage stage, GameState state, Player player) {
 		super(stage.widthProperty().doubleValue(),
 				stage.heightProperty().doubleValue());
 
@@ -25,6 +26,8 @@ public class GameCanvas extends Canvas {
 		stage.heightProperty().addListener(stageSizeListener);
 
 		gc = this.getGraphicsContext2D();
+		this.state = state;
+		this.player = player;
 	}
 
 	private void onStageWindowResize(Stage stage) {
@@ -40,11 +43,27 @@ public class GameCanvas extends Canvas {
 	public void render() {
 		clearCanvas();
 
-		System.out
-				.println("Width: " + canvasWidth + "; Height: " + canvasHeight);
+		int tileSize = 100;
 
-		this.gc.setFill(Color.RED);
-		this.gc.fillRect(canvasWidth / 2 - 25, canvasHeight / 2 - 25, 50, 50);
+		for (Renderable r : state.getRenderables()) {
+
+			Vector2 renderablePosition = r.getPosition();
+			Vector2 playerPosition = player.getPosition();
+
+			Vector2 offsetPosition = new Vector2(
+					renderablePosition.getX() - playerPosition.getX(),
+					renderablePosition.getY() - playerPosition.getY());
+
+			double x = renderablePosition.getX();
+			double y = renderablePosition.getY();
+
+			gc.drawImage(r.getTexture(),
+					(offsetPosition.getX()) * tileSize + canvasWidth / 2
+							- tileSize / 2,
+					-(offsetPosition.getY()) * (tileSize / 2) + canvasHeight / 2
+							- tileSize / 2,
+					tileSize, tileSize);
+		}
 	}
 
 	public double getCanvasWidth() {
