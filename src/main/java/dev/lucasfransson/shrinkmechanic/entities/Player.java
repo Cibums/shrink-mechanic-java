@@ -12,7 +12,7 @@ public class Player extends Renderable implements ITickable {
 	public Player(InputManager input) {
 		super(Renderable.getTextureFromPath("/player.png"));
 		this.input = input;
-		this.setRenderingLayer(100);
+		this.setRenderingLayer(1);
 	}
 
 	@Override
@@ -33,9 +33,6 @@ public class Player extends Renderable implements ITickable {
 		if (input.isKeyHeld(KeyCode.D)) {
 			this.moveHorizontally(walkSpeed * deltaTime);
 		}
-
-		System.out.println("X: " + this.getPosition().getX() + "; Y: "
-				+ this.getPosition().getY());
 	}
 
 	public void setWalkSpeed(double walkSpeed) {

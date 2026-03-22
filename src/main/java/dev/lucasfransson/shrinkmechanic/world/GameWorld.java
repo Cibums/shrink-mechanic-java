@@ -2,15 +2,20 @@ package dev.lucasfransson.shrinkmechanic.world;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
+import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.GrassTile;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
 import dev.lucasfransson.shrinkmechanic.world.tiles.WaterTile;
 
 public class GameWorld {
 
+	public final static int gridElementSize = 32;
+
 	private ObjectRegistry registry;
 
 	private Tile[][] ground;
+	private WorldObject[][] worldObjects;
 	private int worldSize;
 
 	public GameWorld(int worldSize, ObjectRegistry registry) {
@@ -18,13 +23,15 @@ public class GameWorld {
 		this.registry = registry;
 		this.worldSize = worldSize;
 		ground = new Tile[worldSize][worldSize];
+		worldObjects = new WorldObject[worldSize][worldSize];
 
 		generateWorld();
 	}
 
 	public void generateWorld() {
 
-		PerlinNoise perlinNoise = new PerlinNoise();
+		PerlinNoise groundPerlinNoise = new PerlinNoise();
+		PerlinNoise forestPerlinNoise = new PerlinNoise();
 
 		double scale = 0.1;
 		double threshold = 0.0;
@@ -32,16 +39,61 @@ public class GameWorld {
 		for (int x = 0; x < worldSize; x++) {
 			for (int y = 0; y < worldSize; y++) {
 
-				double noiseValue = perlinNoise.perlin(x * scale, y * scale);
+				double noiseValue = groundPerlinNoise.perlin(x * scale,
+						y * scale);
 
 				if (noiseValue > threshold) {
 					addTileToWorld(new GrassTile(), new Vector2Int(x, y));
+
+					double forestNoiseValue = forestPerlinNoise
+							.perlin(x * scale, y * scale);
+
+					if (forestNoiseValue > threshold) {
+						addWorldObjectToWorld(new Tree(), new Vector2Int(x, y));
+					}
+
 				} else {
 					addTileToWorld(new WaterTile(), new Vector2Int(x, y));
 				}
 
 			}
 		}
+	}
+
+	public void addWorldObjectToWorld(WorldObject object, Vector2Int position) {
+		addWorldObjectToWorld(object, position, ReplacementMode.REPLACE);
+	}
+
+	public void addWorldObjectToWorld(WorldObject object, Vector2Int position,
+			ReplacementMode replacementMode) {
+		object.setPosition(position);
+
+		int x = position.getIntX();
+		int y = position.getIntY();
+
+		switch (replacementMode) {
+			case ReplacementMode.KEEP :
+
+				if (worldObjects[x][y] != null) {
+					return;
+				}
+
+				break;
+			case ReplacementMode.DESTROY :
+				destroyWorldObject(position);
+				break;
+			default :
+				break;
+		}
+
+		worldObjects[(int) position.getX()][(int) position.getY()] = object;
+		registry.instantiate(object);
+	}
+
+	private void destroyWorldObject(Vector2Int position) {
+		registry.destroy(worldObjects[position.getIntX()][position.getIntY()]);
+		worldObjects[position.getIntX()][position.getIntY()].onDestroy();
+		worldObjects[position.getIntX()][position.getIntY()] = null;
 	}
 
 	public void addTileToWorld(Tile tile, Vector2Int position) {
@@ -59,7 +111,7 @@ public class GameWorld {
 		switch (replacementMode) {
 			case ReplacementMode.KEEP :
 
-				if (ground[x][y] == null) {
+				if (ground[x][y] != null) {
 					return;
 				}
 

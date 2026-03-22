@@ -1,17 +1,18 @@
-package dev.lucasfransson.shrinkmechanic.world.tiles;
+package dev.lucasfransson.shrinkmechanic.world.objects;
+
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import javafx.scene.image.Image;
 
-public abstract class Tile extends Renderable {
+public abstract class WorldObject extends Renderable {
 
-	public Tile(Image texture) {
+	public WorldObject(Image texture) {
 		super(texture == null
 				? new Image(Renderable.class.getResource("/default.png")
 						.toExternalForm())
 				: texture);
-		this.setSize(new Vector2(32, 16));
-		this.setSpriteYOffset(32.0 / 4);
+		this.setSize(new Vector2(10, 10));
+		this.setRenderingLayer(1);
 	}
 
 	public abstract void onDestroy();

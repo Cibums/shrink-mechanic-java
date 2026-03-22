@@ -1,9 +1,11 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.entities.Player;
+import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GameCanvas extends Canvas {
@@ -46,9 +48,9 @@ public class GameCanvas extends Canvas {
 	public void render() {
 		clearCanvas();
 
-		int tileSize = 100;
-
 		for (Renderable r : renderSystem.getRenderables()) {
+
+			Vector2 objectSpriteSize = r.getSpriteSize();
 
 			Vector2 renderablePosition = r.getPosition();
 			Vector2 playerPosition = player.getPosition();
@@ -57,16 +59,33 @@ public class GameCanvas extends Canvas {
 					renderablePosition.getX() - playerPosition.getX(),
 					renderablePosition.getY() - playerPosition.getY());
 
-			double x = renderablePosition.getX();
-			double y = renderablePosition.getY();
-
 			gc.drawImage(r.getTexture(),
-					(offsetPosition.getX()) * tileSize + canvasWidth / 2
-							- tileSize / 2,
-					-(offsetPosition.getY()) * (tileSize / 2) + canvasHeight / 2
-							- tileSize / 2,
-					tileSize, tileSize);
+					offsetPosition.getX() * GameWorld.gridElementSize
+							+ canvasWidth / 2 - GameWorld.gridElementSize / 2,
+					-offsetPosition.getY() * GameWorld.gridElementSize / 2
+							- GameWorld.gridElementSize / 2 + canvasHeight / 2,
+					r.getSpriteSize().getX(), r.getSpriteSize().getY());
+
+			gc.setFill(Color.RED);
+			strokeCorners(
+					offsetPosition.getX() * GameWorld.gridElementSize
+							+ canvasWidth / 2 - GameWorld.gridElementSize / 2,
+					-offsetPosition.getY() * GameWorld.gridElementSize / 2
+							- GameWorld.gridElementSize / 2 + canvasHeight / 2,
+					r.getSize().getX(), r.getSize().getY(), 10);
 		}
+	}
+
+	private void strokeCorners(double x, double y, double w, double h,
+			double len) {
+		gc.strokeLine(x, y, x + len, y);
+		gc.strokeLine(x, y, x, y + len);
+		gc.strokeLine(x + w, y, x + w - len, y);
+		gc.strokeLine(x + w, y, x + w, y + len);
+		gc.strokeLine(x, y + h, x + len, y + h);
+		gc.strokeLine(x, y + h, x, y + h - len);
+		gc.strokeLine(x + w, y + h, x + w - len, y + h);
+		gc.strokeLine(x + w, y + h, x + w, y + h - len);
 	}
 
 	public double getCanvasWidth() {
