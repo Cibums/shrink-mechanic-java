@@ -4,11 +4,11 @@ import javafx.animation.AnimationTimer;
 public class GameLoop extends AnimationTimer {
 
 	private GameCanvas canvas;
-	private GameState state;
+	private TickSystem tickSystem;
 
-	public GameLoop(GameCanvas canvas, GameState state) {
+	public GameLoop(GameCanvas canvas, TickSystem tickSystem) {
 		this.canvas = canvas;
-		this.state = state;
+		this.tickSystem = tickSystem;
 	}
 
 	long lastUpdate = System.nanoTime();
@@ -17,7 +17,7 @@ public class GameLoop extends AnimationTimer {
 	public void handle(long now) {
 		long currentTime = System.nanoTime();
 		if (currentTime - lastUpdate >= 16_666_667) {
-			state.update();
+			tickSystem.update();
 			canvas.render();
 			lastUpdate = currentTime;
 		}

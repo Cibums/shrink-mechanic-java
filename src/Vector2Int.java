@@ -11,7 +11,7 @@ public class Vector2Int extends Vector2 {
 	}
 
 	public void setX(int x) {
-		this.setX(x);
+		super.setX(x);
 	}
 
 	@Override
@@ -28,7 +28,7 @@ public class Vector2Int extends Vector2 {
 	}
 
 	public void setY(int y) {
-		this.setY(y);
+		super.setY(y);
 	}
 
 	public static Vector2Int zero() {

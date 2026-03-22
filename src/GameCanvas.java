@@ -9,10 +9,10 @@ public class GameCanvas extends Canvas {
 	private double canvasHeight;
 
 	private GraphicsContext gc;
-	private GameState state;
+	private RenderSystem renderSystem;
 	private Player player;
 
-	public GameCanvas(Stage stage, GameState state, Player player) {
+	public GameCanvas(Stage stage, RenderSystem renderSystem, Player player) {
 		super(stage.widthProperty().doubleValue(),
 				stage.heightProperty().doubleValue());
 
@@ -26,7 +26,7 @@ public class GameCanvas extends Canvas {
 		stage.heightProperty().addListener(stageSizeListener);
 
 		gc = this.getGraphicsContext2D();
-		this.state = state;
+		this.renderSystem = renderSystem;
 		this.player = player;
 	}
 
@@ -45,7 +45,7 @@ public class GameCanvas extends Canvas {
 
 		int tileSize = 100;
 
-		for (Renderable r : state.getRenderables()) {
+		for (Renderable r : renderSystem.getRenderables()) {
 
 			Vector2 renderablePosition = r.getPosition();
 			Vector2 playerPosition = player.getPosition();

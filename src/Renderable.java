@@ -7,7 +7,6 @@ public class Renderable extends GameObject {
 
 	public Renderable(Image texture) {
 		this.texture = texture;
-		GameState.getInstance().registerRenderable(this);
 	}
 
 	public Image getTexture() {

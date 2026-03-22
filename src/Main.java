@@ -17,19 +17,24 @@ public class Main extends Application {
 
 		VBox layout = new VBox();
 
-		GameState state = GameState.getInstance();
-		Player player = new Player();
-		GameCanvas canvas = new GameCanvas(stage, state, player);
+		InputManager input = new InputManager();
 
-		GameLoop loop = new GameLoop(canvas, state);
+		TickSystem tickSystem = new TickSystem();
+		RenderSystem renderSystem = new RenderSystem();
+		ObjectRegistry registry = new ObjectRegistry(tickSystem, renderSystem);
+
+		GameWorld world = new GameWorld(100, registry);
+		GameState state = new GameState(world);
+		Player player = registry.instantiate(new Player(input));
+		GameCanvas canvas = new GameCanvas(stage, renderSystem, player);
+
+		GameLoop loop = new GameLoop(canvas, tickSystem);
 		loop.start();
 
 		layout.getChildren().add(canvas);
 		Scene scene = new Scene(layout);
 
-		state.getInputManager().listen(scene);
-
-		stage.setFullScreen(false);
+		input.listen(scene);
 
 		stage.setScene(scene);
 		stage.show();

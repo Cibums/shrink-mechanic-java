@@ -1,12 +1,13 @@
 public class GameWorld {
 
+	private ObjectRegistry registry;
+
 	private Tile[][] ground;
 	private int worldSize;
 
-	public GameWorld(int worldSize) {
+	public GameWorld(int worldSize, ObjectRegistry registry) {
 
-		Player camera = new Player();
-
+		this.registry = registry;
 		this.worldSize = worldSize;
 		ground = new Tile[worldSize][worldSize];
 
@@ -63,10 +64,13 @@ public class GameWorld {
 		}
 
 		ground[(int) position.getX()][(int) position.getY()] = tile;
+		registry.instantiate(tile);
 	}
 
 	public void destroyTile(Vector2Int position) {
+		registry.destroy(ground[position.getIntX()][position.getIntY()]);
 		ground[position.getIntX()][position.getIntY()].onDestroy();
+		ground[position.getIntX()][position.getIntY()] = null;
 	}
 
 	public Tile[][] getGround() {

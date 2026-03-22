@@ -2,18 +2,17 @@ import javafx.scene.input.KeyCode;
 
 public class Player extends Renderable implements ITickable {
 
+	private InputManager input;
 	private double walkSpeed = 0.1;
 
-	public Player() {
+	public Player(InputManager input) {
 		super(Renderable.getTextureFromPath("/player.png"));
+		this.input = input;
 		this.setRenderingLayer(100);
-		this.registerAsTickable();
 	}
 
 	@Override
 	public void update() {
-
-		InputManager input = GameState.getInstance().getInputManager();
 
 		if (input.isKeyHeld(KeyCode.W)) {
 			this.moveVertically(walkSpeed);
