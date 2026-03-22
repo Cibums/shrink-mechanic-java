@@ -1,3 +1,11 @@
+package dev.lucasfransson.shrinkmechanic.world;
+import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
+import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.tiles.GrassTile;
+import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
+import dev.lucasfransson.shrinkmechanic.world.tiles.WaterTile;
+
 public class GameWorld {
 
 	private ObjectRegistry registry;

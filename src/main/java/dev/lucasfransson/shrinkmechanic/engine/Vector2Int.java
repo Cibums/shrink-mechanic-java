@@ -1,3 +1,4 @@
+package dev.lucasfransson.shrinkmechanic.engine;
 
 public class Vector2Int extends Vector2 {
 

@@ -1,3 +1,4 @@
+package dev.lucasfransson.shrinkmechanic.engine.tick;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,9 +12,9 @@ public class TickSystem {
 		tickables.remove(t);
 	}
 
-	public void update() {
-		for (ITickable t : tickables) {
-			t.update();
+	public void update(double deltaTime) {
+		for (ITickable t : List.copyOf(tickables)) {
+			t.update(deltaTime);
 		}
 	}
 }

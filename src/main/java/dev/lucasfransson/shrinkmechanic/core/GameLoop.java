@@ -1,4 +1,7 @@
+package dev.lucasfransson.shrinkmechanic.core;
 
+import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
+import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
 import javafx.animation.AnimationTimer;
 
 public class GameLoop extends AnimationTimer {
@@ -15,12 +18,12 @@ public class GameLoop extends AnimationTimer {
 
 	@Override
 	public void handle(long now) {
-		long currentTime = System.nanoTime();
-		if (currentTime - lastUpdate >= 16_666_667) {
-			tickSystem.update();
-			canvas.render();
-			lastUpdate = currentTime;
-		}
+		double deltaTime = (now - lastUpdate) / 1_000_000_000.0; // convert to
+																	// seconds
+		lastUpdate = now;
+
+		tickSystem.update(deltaTime);
+		canvas.render();
 	}
 
 }

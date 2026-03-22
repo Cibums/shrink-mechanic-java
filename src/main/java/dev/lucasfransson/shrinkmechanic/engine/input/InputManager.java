@@ -1,3 +1,4 @@
+package dev.lucasfransson.shrinkmechanic.engine.input;
 import java.util.HashSet;
 import java.util.Set;
 

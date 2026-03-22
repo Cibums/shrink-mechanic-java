@@ -1,3 +1,12 @@
+package dev.lucasfransson.shrinkmechanic.core;
+
+import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
+import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
+import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
+import dev.lucasfransson.shrinkmechanic.entities.Player;
+import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;

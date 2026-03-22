@@ -1,3 +1,4 @@
+package dev.lucasfransson.shrinkmechanic.world.generation;
 import java.util.Random;
 
 public class PerlinNoise {

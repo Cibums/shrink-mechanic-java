@@ -1,3 +1,6 @@
+package dev.lucasfransson.shrinkmechanic.engine.rendering;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2;
+import dev.lucasfransson.shrinkmechanic.entities.Player;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;

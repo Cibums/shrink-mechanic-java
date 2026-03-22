@@ -1,3 +1,9 @@
+package dev.lucasfransson.shrinkmechanic.engine;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
+import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
+
 public class ObjectRegistry {
 	private final TickSystem tickSystem;
 	private final RenderSystem renderSystem;
