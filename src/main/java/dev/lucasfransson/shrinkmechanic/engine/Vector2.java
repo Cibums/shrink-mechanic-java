@@ -28,4 +28,9 @@ public class Vector2 {
 	public static Vector2 zero() {
 		return new Vector2(0, 0);
 	}
+
+	public Vector2 subtract(Vector2 position) {
+		return new Vector2(this.getX() - position.getX(),
+				this.getY() - position.getY());
+	}
 }

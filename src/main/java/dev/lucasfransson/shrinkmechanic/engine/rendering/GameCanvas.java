@@ -2,6 +2,7 @@ package dev.lucasfransson.shrinkmechanic.engine.rendering;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.entities.Player;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
+import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -33,6 +34,8 @@ public class GameCanvas extends Canvas {
 		gc = this.getGraphicsContext2D();
 		this.renderSystem = renderSystem;
 		this.player = player;
+
+		onStageWindowResize(stage);
 	}
 
 	private void onStageWindowResize(Stage stage) {
@@ -49,35 +52,29 @@ public class GameCanvas extends Canvas {
 		clearCanvas();
 
 		for (Renderable r : renderSystem.getRenderables()) {
+			Vector2 offset = r.getPosition().subtract(player.getPosition());
+			Vector2 size = r.getSize();
+			int grid = GameWorld.gridElementSize;
 
-			Vector2 objectSpriteSize = r.getSpriteSize();
+			double x = (offset.getX() * grid)
+					+ (canvasWidth - size.getX()) / 2.0;
+			double y = (-offset.getY() * grid)
+					+ (canvasHeight - size.getY()) / 2.0;
 
-			Vector2 renderablePosition = r.getPosition();
-			Vector2 playerPosition = player.getPosition();
-
-			Vector2 offsetPosition = new Vector2(
-					renderablePosition.getX() - playerPosition.getX(),
-					renderablePosition.getY() - playerPosition.getY());
-
-			gc.drawImage(r.getTexture(),
-					offsetPosition.getX() * GameWorld.gridElementSize
-							+ canvasWidth / 2 - GameWorld.gridElementSize / 2,
-					-offsetPosition.getY() * GameWorld.gridElementSize / 2
-							- GameWorld.gridElementSize / 2 + canvasHeight / 2,
+			gc.drawImage(r.getTexture(), x, y - r.getSpriteYOffset(),
 					r.getSpriteSize().getX(), r.getSpriteSize().getY());
 
-			gc.setFill(Color.RED);
-			strokeCorners(
-					offsetPosition.getX() * GameWorld.gridElementSize
-							+ canvasWidth / 2 - GameWorld.gridElementSize / 2,
-					-offsetPosition.getY() * GameWorld.gridElementSize / 2
-							- GameWorld.gridElementSize / 2 + canvasHeight / 2,
-					r.getSize().getX(), r.getSize().getY(), 10);
+			Color debugColor = r instanceof WorldObject
+					? Color.RED
+					: Color.BLACK;
+
+			strokeCorners(x, y, size.getX(), size.getY(), 10, debugColor);
 		}
 	}
 
 	private void strokeCorners(double x, double y, double w, double h,
-			double len) {
+			double len, Color color) {
+		gc.setStroke(color);
 		gc.strokeLine(x, y, x + len, y);
 		gc.strokeLine(x, y, x, y + len);
 		gc.strokeLine(x + w, y, x + w - len, y);

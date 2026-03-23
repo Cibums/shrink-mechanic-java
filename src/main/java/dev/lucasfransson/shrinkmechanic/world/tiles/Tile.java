@@ -10,8 +10,9 @@ public abstract class Tile extends Renderable {
 				? new Image(Renderable.class.getResource("/default.png")
 						.toExternalForm())
 				: texture);
-		this.setSize(new Vector2(32, 16));
-		this.setSpriteYOffset(32.0 / 4);
+
+		this.setSize(new Vector2(32, 32));
+		this.setSpriteYOffset(0);
 	}
 
 	public abstract void onDestroy();

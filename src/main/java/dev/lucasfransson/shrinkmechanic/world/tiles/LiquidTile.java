@@ -8,5 +8,7 @@ public abstract class LiquidTile extends Tile {
 				? new Image(LiquidTile.class.getResource("/liquid_default.png")
 						.toExternalForm())
 				: texture);
+
+		this.setSpriteYOffset(-8);
 	}
 }
