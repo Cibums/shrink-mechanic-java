@@ -3,7 +3,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import dev.lucasfransson.shrinkmechanic.engine.Vector2;
+
 public class RenderSystem {
+
 	private final List<Renderable> renderables = new ArrayList<>();
 	private boolean dirty = false;
 
@@ -23,5 +26,20 @@ public class RenderSystem {
 			dirty = false;
 		}
 		return renderables;
+	}
+
+	public List<Renderable> getRenderablesInRange(Vector2 center, double rangeX,
+			double rangeY) {
+		if (dirty) {
+			renderables.sort(Comparator
+					.comparingDouble(Renderable::getRenderingZOffset));
+			dirty = false;
+		}
+
+		return renderables.stream().filter(r -> {
+			Vector2 pos = r.getPosition();
+			return Math.abs(pos.getX() - center.getX()) <= rangeX
+					&& Math.abs(pos.getY() - center.getY()) <= rangeY;
+		}).toList();
 	}
 }

@@ -10,7 +10,7 @@ import dev.lucasfransson.shrinkmechanic.world.tiles.WaterTile;
 
 public class GameWorld {
 
-	public final static int gridElementSize = 32;
+	public static final int gridElementSize = 32;
 
 	private ObjectRegistry registry;
 

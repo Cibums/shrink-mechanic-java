@@ -1,15 +1,19 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
+import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.entities.Player;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GameCanvas extends Canvas {
+
+	private boolean debugMode = false;
 
 	private double canvasWidth;
 	private double canvasHeight;
@@ -17,8 +21,10 @@ public class GameCanvas extends Canvas {
 	private GraphicsContext gc;
 	private RenderSystem renderSystem;
 	private Player player;
+	private InputManager input;
 
-	public GameCanvas(Stage stage, RenderSystem renderSystem, Player player) {
+	public GameCanvas(Stage stage, RenderSystem renderSystem, Player player,
+			InputManager input) {
 		super(stage.widthProperty().doubleValue(),
 				stage.heightProperty().doubleValue());
 
@@ -34,6 +40,7 @@ public class GameCanvas extends Canvas {
 		gc = this.getGraphicsContext2D();
 		this.renderSystem = renderSystem;
 		this.player = player;
+		this.input = input;
 
 		onStageWindowResize(stage);
 	}
@@ -49,26 +56,47 @@ public class GameCanvas extends Canvas {
 	}
 
 	public void render() {
+
+		if (input.isKeyHeld(KeyCode.H)) {
+			debugMode = true;
+		} else {
+			debugMode = false;
+		}
+
 		clearCanvas();
 
-		for (Renderable r : renderSystem.getRenderables()) {
-			Vector2 offset = r.getPosition().subtract(player.getPosition());
+		Vector2 playerPosition = player.getPosition();
+
+		for (Renderable r : renderSystem.getRenderablesInRange(playerPosition,
+				canvasWidth / GameWorld.gridElementSize,
+				canvasHeight / GameWorld.gridElementSize)) {
+
+			Vector2 offset = r.getPosition().subtract(playerPosition);
 			Vector2 size = r.getSize();
 			int grid = GameWorld.gridElementSize;
 
-			double x = (offset.getX() * grid)
-					+ (canvasWidth - size.getX()) / 2.0;
-			double y = (-offset.getY() * grid)
-					+ (canvasHeight - size.getY()) / 2.0;
+			double cellX = (offset.getX() * grid) + (canvasWidth / 2.0)
+					- (grid / 2.0);
+			double cellY = (-offset.getY() * grid) + (canvasHeight / 2.0)
+					- (grid / 2.0);
 
-			gc.drawImage(r.getTexture(), x, y - r.getSpriteYOffset(),
-					r.getSpriteSize().getX(), r.getSpriteSize().getY());
+			double spriteW = r.getSpriteSize().getX();
+			double spriteH = r.getSpriteSize().getY();
+			double spriteX = cellX + (grid - spriteW) / 2.0;
+			double spriteY = cellY - r.getSpriteYOffset();
 
-			Color debugColor = r instanceof WorldObject
-					? Color.RED
-					: Color.BLACK;
+			gc.drawImage(r.getTexture(), spriteX, spriteY, spriteW, spriteH);
 
-			strokeCorners(x, y, size.getX(), size.getY(), 10, debugColor);
+			if (debugMode) {
+				double collX = cellX + (grid - size.getX()) / 2.0;
+				double collY = cellY + (grid - size.getY()) / 2.0;
+
+				Color debugColor = r instanceof WorldObject
+						? Color.RED
+						: Color.BLACK;
+				strokeCorners(collX, collY, size.getX(), size.getY(), 10,
+						debugColor);
+			}
 		}
 	}
 

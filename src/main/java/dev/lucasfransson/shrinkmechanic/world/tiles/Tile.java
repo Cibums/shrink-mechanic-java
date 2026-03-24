@@ -1,6 +1,7 @@
 package dev.lucasfransson.shrinkmechanic.world.tiles;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 import javafx.scene.image.Image;
 
 public abstract class Tile extends Renderable {
@@ -12,7 +13,7 @@ public abstract class Tile extends Renderable {
 				: texture);
 
 		this.setSize(new Vector2(32, 32));
-		this.setSpriteYOffset(0);
+		this.setSpriteAlignment(SpriteAlignment.TOP);
 	}
 
 	public abstract void onDestroy();

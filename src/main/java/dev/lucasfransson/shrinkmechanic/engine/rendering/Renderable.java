@@ -1,6 +1,7 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
 import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
+import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import javafx.scene.image.Image;
 
 public class Renderable extends GameObject {
@@ -56,5 +57,18 @@ public class Renderable extends GameObject {
 
 	public void setSpriteYOffset(double spriteYOffset) {
 		this.spriteYOffset = spriteYOffset;
+	}
+
+	public void setSpriteAlignment(SpriteAlignment alignment) {
+		int grid = GameWorld.gridElementSize;
+		double spriteH = this.getTexture().getHeight();
+
+		double offset = switch (alignment) {
+			case TOP -> 0;
+			case CENTER -> (spriteH - grid) / 2.0;
+			case BOTTOM -> spriteH - grid;
+		};
+
+		this.setSpriteYOffset(offset);
 	}
 }

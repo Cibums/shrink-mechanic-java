@@ -35,7 +35,7 @@ public class Main extends Application {
 		GameWorld world = new GameWorld(100, registry);
 		GameState state = new GameState(world);
 		Player player = registry.instantiate(new Player(input));
-		GameCanvas canvas = new GameCanvas(stage, renderSystem, player);
+		GameCanvas canvas = new GameCanvas(stage, renderSystem, player, input);
 
 		GameLoop loop = new GameLoop(canvas, tickSystem);
 		loop.start();

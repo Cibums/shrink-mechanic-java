@@ -1,4 +1,5 @@
 package dev.lucasfransson.shrinkmechanic.entities;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
@@ -12,6 +13,7 @@ public class Player extends Renderable implements ITickable {
 	public Player(InputManager input) {
 		super(Renderable.getTextureFromPath("/player.png"));
 		this.input = input;
+		this.setSize(new Vector2(32, 32));
 		this.setRenderingLayer(1);
 	}
 

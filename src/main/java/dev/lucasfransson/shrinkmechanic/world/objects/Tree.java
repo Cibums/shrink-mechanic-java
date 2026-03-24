@@ -1,16 +1,13 @@
 package dev.lucasfransson.shrinkmechanic.world.objects;
 
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
-import dev.lucasfransson.shrinkmechanic.world.GameWorld;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 
 public class Tree extends WorldObject {
 
 	public Tree() {
 		super(Renderable.getTextureFromPath("/tree.png"));
-
-		this.setSpriteYOffset(
-				(this.getTexture().getHeight() - GameWorld.gridElementSize)
-						+ GameWorld.gridElementSize / 2);
+		this.setSpriteAlignment(SpriteAlignment.BOTTOM);
 	}
 
 	@Override
