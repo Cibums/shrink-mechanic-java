@@ -8,10 +8,15 @@ import javafx.scene.input.KeyCode;
 public class InputManager {
 
 	private final Set<KeyCode> heldKeys = new HashSet<>();
+	private double scrollDelta = 0;
 
 	public void listen(Scene scene) {
 		scene.setOnKeyPressed(event -> heldKeys.add(event.getCode()));
 		scene.setOnKeyReleased(event -> heldKeys.remove(event.getCode()));
+
+		scene.setOnScroll(event -> {
+			scrollDelta += event.getDeltaY();
+		});
 	}
 
 	public boolean isKeyHeld(KeyCode key) {
@@ -24,5 +29,11 @@ public class InputManager {
 				return true;
 		}
 		return false;
+	}
+
+	public double consumeScrollDelta() {
+		double delta = scrollDelta;
+		scrollDelta = 0;
+		return delta;
 	}
 }

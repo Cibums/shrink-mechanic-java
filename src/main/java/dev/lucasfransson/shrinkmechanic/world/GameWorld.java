@@ -1,7 +1,10 @@
 package dev.lucasfransson.shrinkmechanic.world;
+import java.util.Random;
+
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.objects.Rock;
 import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.GrassTile;
@@ -48,8 +51,16 @@ public class GameWorld {
 					double forestNoiseValue = forestPerlinNoise
 							.perlin(x * scale, y * scale);
 
-					if (forestNoiseValue > threshold) {
+					Random rnd = new Random();
+
+					if (forestNoiseValue > threshold
+							&& rnd.nextDouble() <= 0.7f) {
 						addWorldObjectToWorld(new Tree(), new Vector2Int(x, y));
+					}
+
+					if (rnd.nextDouble() < 0.1f) {
+						addWorldObjectToWorld(new Rock(), new Vector2Int(x, y),
+								ReplacementMode.KEEP);
 					}
 
 				} else {

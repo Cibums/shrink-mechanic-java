@@ -4,18 +4,16 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 
-public class Tree extends WorldObject {
+public class Rock extends WorldObject {
 
-	public Tree() {
-		super(Renderable.getTextureFromPath("/tree.png"));
-		this.setSpriteAlignment(SpriteAlignment.BOTTOM);
-		this.setSize(new Vector2(8, 6));
+	public Rock() {
+		super(Renderable.getTextureFromPath("/rock.png"));
+		this.setSpriteAlignment(SpriteAlignment.CENTER);
+		this.setSize(new Vector2(12, 8));
 	}
 
 	@Override
 	public void onDestroy() {
-		// TODO Auto-generated method stub
-
 	}
 
 }
