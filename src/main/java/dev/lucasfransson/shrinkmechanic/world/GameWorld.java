@@ -13,8 +13,6 @@ import dev.lucasfransson.shrinkmechanic.world.tiles.WaterTile;
 
 public class GameWorld {
 
-	public static final int gridElementSize = 32;
-
 	private ObjectRegistry registry;
 
 	private Tile[][] ground;
@@ -31,13 +29,15 @@ public class GameWorld {
 		generateWorld();
 	}
 
-	public void generateWorld() {
+	private void generateWorld() {
 
 		PerlinNoise groundPerlinNoise = new PerlinNoise();
 		PerlinNoise forestPerlinNoise = new PerlinNoise();
 
 		double scale = 0.1;
 		double threshold = -0.3;
+
+		Random rnd = new Random();
 
 		for (int x = 0; x < worldSize; x++) {
 			for (int y = 0; y < worldSize; y++) {
@@ -51,10 +51,8 @@ public class GameWorld {
 					double forestNoiseValue = forestPerlinNoise
 							.perlin(x * scale, y * scale);
 
-					Random rnd = new Random();
-
-					if (forestNoiseValue > threshold
-							&& rnd.nextDouble() <= 0.7f) {
+					if (forestNoiseValue > threshold && rnd.nextDouble() <= 0.7f
+							&& (x != 0 && y != 0)) {
 						addWorldObjectToWorld(new Tree(), new Vector2Int(x, y));
 					}
 
@@ -79,8 +77,8 @@ public class GameWorld {
 			ReplacementMode replacementMode) {
 		object.setPosition(position);
 
-		int x = position.getIntX();
-		int y = position.getIntY();
+		int x = position.getX();
+		int y = position.getY();
 
 		switch (replacementMode) {
 			case ReplacementMode.KEEP :
@@ -97,14 +95,18 @@ public class GameWorld {
 				break;
 		}
 
-		worldObjects[(int) position.getX()][(int) position.getY()] = object;
+		if (worldObjects[x][y] != null) {
+			registry.destroy(worldObjects[x][y]);
+		}
+
+		worldObjects[x][y] = object;
 		registry.instantiate(object);
 	}
 
-	private void destroyWorldObject(Vector2Int position) {
-		registry.destroy(worldObjects[position.getIntX()][position.getIntY()]);
-		worldObjects[position.getIntX()][position.getIntY()].onDestroy();
-		worldObjects[position.getIntX()][position.getIntY()] = null;
+	public void destroyWorldObject(Vector2Int position) {
+		worldObjects[position.getX()][position.getY()].onDestroy();
+		registry.destroy(worldObjects[position.getX()][position.getY()]);
+		worldObjects[position.getX()][position.getY()] = null;
 	}
 
 	public void addTileToWorld(Tile tile, Vector2Int position) {
@@ -116,8 +118,8 @@ public class GameWorld {
 
 		tile.setPosition(position);
 
-		int x = position.getIntX();
-		int y = position.getIntY();
+		int x = position.getX();
+		int y = position.getY();
 
 		switch (replacementMode) {
 			case ReplacementMode.KEEP :
@@ -134,14 +136,22 @@ public class GameWorld {
 				break;
 		}
 
-		ground[(int) position.getX()][(int) position.getY()] = tile;
+		if (ground[x][y] != null) {
+			registry.destroy(ground[x][y]);
+		}
+
+		ground[x][y] = tile;
 		registry.instantiate(tile);
 	}
 
 	public void destroyTile(Vector2Int position) {
-		registry.destroy(ground[position.getIntX()][position.getIntY()]);
-		ground[position.getIntX()][position.getIntY()].onDestroy();
-		ground[position.getIntX()][position.getIntY()] = null;
+
+		int x = position.getX();
+		int y = position.getY();
+
+		ground[x][y].onDestroy();
+		registry.destroy(ground[x][y]);
+		ground[x][y] = null;
 	}
 
 	public Tile[][] getGround() {

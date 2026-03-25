@@ -14,7 +14,6 @@ public class Tree extends WorldObject {
 
 	@Override
 	public void onDestroy() {
-		// TODO Auto-generated method stub
 
 	}
 

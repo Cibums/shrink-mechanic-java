@@ -3,7 +3,7 @@ import java.util.Random;
 
 public class PerlinNoise {
 
-	private double[] permutation;
+	private int[] permutation;
 
 	public PerlinNoise() {
 		Random rnd = new Random();
@@ -17,7 +17,7 @@ public class PerlinNoise {
 
 	private void initPerlin(long seed) {
 		Random rnd = new Random(seed);
-		permutation = new double[512];
+		permutation = new int[512];
 		int[] p = new int[256];
 
 		for (int i = 0; i < 256; i++)
@@ -51,18 +51,19 @@ public class PerlinNoise {
 		double xf = x - Math.floor(x);
 		double yf = y - Math.floor(y);
 
-		double u = fade(xf), v = fade(yf);
+		double u = fade(xf);
+		double v = fade(yf);
 
-		int aa = (int) (permutation[xi] + yi) & 255;
-		int ab = (int) (permutation[xi] + yi + 1) & 255;
-		int ba = (int) (permutation[xi + 1] + yi) & 255;
-		int bb = (int) (permutation[xi + 1] + yi + 1) & 255;
+		int aa = (permutation[xi] + yi) & 255;
+		int ab = (permutation[xi] + yi + 1) & 255;
+		int ba = (permutation[xi + 1] + yi) & 255;
+		int bb = (permutation[xi + 1] + yi + 1) & 255;
 
 		return lerp(
-				lerp(grad((int) permutation[aa], xf, yf),
-						grad((int) permutation[ba], xf - 1, yf), u),
-				lerp(grad((int) permutation[ab], xf, yf - 1),
-						grad((int) permutation[bb], xf - 1, yf - 1), u),
+				lerp(grad(permutation[aa], xf, yf),
+						grad(permutation[ba], xf - 1, yf), u),
+				lerp(grad(permutation[ab], xf, yf - 1),
+						grad(permutation[bb], xf - 1, yf - 1), u),
 				v);
 	}
 }

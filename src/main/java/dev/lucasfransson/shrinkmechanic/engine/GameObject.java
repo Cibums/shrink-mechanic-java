@@ -1,6 +1,6 @@
 package dev.lucasfransson.shrinkmechanic.engine;
 
-public class GameObject {
+public class GameObject implements IPositioned {
 
 	private Vector2 position;
 	private Vector2 size;
@@ -11,7 +11,7 @@ public class GameObject {
 	}
 
 	public GameObject(Vector2 position) {
-		this(position, new Vector2(100, 100));
+		this(position, new Vector2(1.0, 1.0));
 	}
 
 	public GameObject(Vector2 position, Vector2 size) {
@@ -27,6 +27,10 @@ public class GameObject {
 		this.position = position;
 	}
 
+	public void setPosition(Vector2Int position) {
+		this.position = position.convertToVector2();
+	}
+
 	public void moveHorizontally(double speed) {
 		this.move(speed, 0);
 	}
@@ -36,7 +40,8 @@ public class GameObject {
 	}
 
 	public void move(double x, double y) {
-		this.move(new Vector2(x, y));
+		this.position = new Vector2(this.position.getX() + x,
+				this.position.getY() + y);
 	}
 
 	public void move(Vector2 vector) {

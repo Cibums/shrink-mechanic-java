@@ -3,6 +3,7 @@ package dev.lucasfransson.shrinkmechanic.core;
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Camera;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
@@ -36,11 +37,11 @@ public class Main extends Application {
 				collisionSystem);
 
 		GameWorld world = new GameWorld(100, registry);
-		GameState state = new GameState(world);
 		Player player = registry.instantiate(new Player(input));
-		GameCanvas canvas = new GameCanvas(stage, renderSystem, player, input);
+		Camera camera = registry.instantiate(new Camera(player));
+		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera, input);
 
-		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, player);
+		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, camera);
 		loop.start();
 
 		layout.getChildren().add(canvas);

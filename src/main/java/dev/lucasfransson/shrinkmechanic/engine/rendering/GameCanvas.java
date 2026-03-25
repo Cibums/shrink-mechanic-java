@@ -1,29 +1,26 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
+import java.util.List;
+
+import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
-import dev.lucasfransson.shrinkmechanic.entities.Player;
-import dev.lucasfransson.shrinkmechanic.world.GameWorld;
-import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GameCanvas extends Canvas {
-
-	private boolean debugMode = false;
 
 	private double canvasWidth;
 	private double canvasHeight;
 
 	private GraphicsContext gc;
 	private RenderSystem renderSystem;
-	private Player player;
+	private Camera camera;
 	private InputManager input;
 
-	public GameCanvas(Stage stage, RenderSystem renderSystem, Player player,
+	public GameCanvas(Stage stage, RenderSystem renderSystem, Camera camera,
 			InputManager input) {
 		super(stage.widthProperty().doubleValue(),
 				stage.heightProperty().doubleValue());
@@ -39,7 +36,7 @@ public class GameCanvas extends Canvas {
 
 		gc = this.getGraphicsContext2D();
 		this.renderSystem = renderSystem;
-		this.player = player;
+		this.camera = camera;
 		this.input = input;
 
 		onStageWindowResize(stage);
@@ -57,34 +54,31 @@ public class GameCanvas extends Canvas {
 
 	private double zoom = 1.5;
 
-	public void render() {
+	private void render() {
+		double rangeX = canvasWidth / (GameConfig.GRID_CELL_SIZE * zoom);
+		double rangeY = canvasHeight / (GameConfig.GRID_CELL_SIZE * zoom);
+		render(renderSystem.getRenderablesInRange(camera.getPosition(), rangeX,
+				rangeY));
+	}
 
-		if (input.isKeyHeld(KeyCode.H)) {
-			debugMode = true;
-		} else {
-			debugMode = false;
-		}
-
+	public void render(List<Renderable> renderables) {
 		double scroll = input.consumeScrollDelta();
 
 		if (scroll != 0 && input.isKeyHeld(KeyCode.ALT)) {
 			zoom += scroll * 0.001;
-			zoom = Math.max(0.25, Math.min(zoom, 5.0));
+			zoom = Math.clamp(zoom, 0.25, 5.0);
 		}
 
 		clearCanvas();
 
-		Vector2 playerPosition = player.getPosition();
+		Vector2 playerPosition = camera.getPosition();
 
 		gc.setImageSmoothing(false);
 
-		for (Renderable r : renderSystem.getRenderablesInRange(playerPosition,
-				canvasWidth / (GameWorld.gridElementSize * zoom),
-				canvasHeight / (GameWorld.gridElementSize * zoom))) {
+		for (Renderable r : renderables) {
 
 			Vector2 offset = r.getPosition().subtract(playerPosition);
-			Vector2 size = r.getSize();
-			int grid = GameWorld.gridElementSize;
+			int grid = GameConfig.GRID_CELL_SIZE;
 
 			double cellX = (offset.getX() * grid * zoom) + (canvasWidth / 2.0)
 					- ((grid * zoom) / 2.0);
@@ -103,32 +97,7 @@ public class GameCanvas extends Canvas {
 				gc.drawImage(r.getTexture(), spriteX, spriteY, spriteW,
 						spriteH);
 			}
-
-			if (debugMode) {
-				double collW = size.getX() * grid * zoom;
-				double collH = size.getY() * grid * zoom;
-				double collX = cellX + ((grid * zoom) - collW) / 2.0;
-				double collY = cellY + ((grid * zoom) - collH) / 2.0;
-
-				Color debugColor = r instanceof WorldObject
-						? Color.RED
-						: Color.BLACK;
-				strokeCorners(collX, collY, collW, collH, 10, debugColor);
-			}
 		}
-	}
-
-	private void strokeCorners(double x, double y, double w, double h,
-			double len, Color color) {
-		gc.setStroke(color);
-		gc.strokeLine(x, y, x + len, y);
-		gc.strokeLine(x, y, x, y + len);
-		gc.strokeLine(x + w, y, x + w - len, y);
-		gc.strokeLine(x + w, y, x + w, y + len);
-		gc.strokeLine(x, y + h, x + len, y + h);
-		gc.strokeLine(x, y + h, x, y + h - len);
-		gc.strokeLine(x + w, y + h, x + w - len, y + h);
-		gc.strokeLine(x + w, y + h, x + w, y + h - len);
 	}
 
 	public double getZoom() {

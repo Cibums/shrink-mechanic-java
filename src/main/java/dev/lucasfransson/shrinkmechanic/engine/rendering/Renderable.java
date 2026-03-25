@@ -1,10 +1,11 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
-import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import javafx.scene.image.Image;
 
 public abstract class Renderable extends GameObject {
@@ -14,22 +15,21 @@ public abstract class Renderable extends GameObject {
 
 	private Image texture;
 	private double spriteYOffset = 0;
+	private Vector2 spriteSize;
 	private boolean flipX = false;
 	private int renderingLayer;
 
 	private Animation currentAnimation = null;
 	private boolean isPaused = true;
 
-	private int currentFrame = 0;
-
 	protected Renderable(Animation animation) {
-		this(animation.getClips().getFirst());
+		this(animation.getFrames().getFirst());
 		currentAnimation = animation;
 		this.playAnimation();
 	}
 
 	protected Renderable(Image texture) {
-		this.texture = texture;
+		this.setTexture(texture);
 	}
 
 	public Image getTexture() {
@@ -37,12 +37,12 @@ public abstract class Renderable extends GameObject {
 			return texture;
 		}
 
-		return new Image(
-				Renderable.class.getResource("/default.png").toExternalForm());
+		return DEFAULT_IMAGE;
 	}
 
 	public void setTexture(Image texture) {
 		this.texture = texture;
+		this.spriteSize = new Vector2(texture.getWidth(), texture.getHeight());
 	}
 
 	public void setRenderingLayer(int layer) {
@@ -64,9 +64,7 @@ public abstract class Renderable extends GameObject {
 	}
 
 	public Vector2 getSpriteSize() {
-		double width = this.getTexture().getWidth();
-		double height = this.getTexture().getHeight();
-		return new Vector2(width, height);
+		return spriteSize;
 	}
 
 	public double getSpriteYOffset() {
@@ -78,7 +76,7 @@ public abstract class Renderable extends GameObject {
 	}
 
 	public void setSpriteAlignment(SpriteAlignment alignment) {
-		int grid = GameWorld.gridElementSize;
+		int grid = GameConfig.GRID_CELL_SIZE;
 		double spriteH = this.getTexture().getHeight();
 
 		double offset = switch (alignment) {
@@ -119,12 +117,10 @@ public abstract class Renderable extends GameObject {
 	}
 
 	public void updateAnimationFrame(double elapsedTime, double deltaTime) {
-
-		int clipCount = currentAnimation.getClips().size();
-		currentFrame = (int) Math
-				.floor((elapsedTime % currentAnimation.getPlayTime())
-						/ currentAnimation.getPlayTime() * clipCount);
-
-		this.setTexture(currentAnimation.getClips().get(currentFrame));
+		List<Image> frames = currentAnimation.getFrames();
+		int frameCount = frames.size();
+		this.setTexture(frames.get(
+				(int) Math.floor((elapsedTime % currentAnimation.getPlayTime())
+						/ currentAnimation.getPlayTime() * frameCount)));
 	}
 }

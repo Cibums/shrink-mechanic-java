@@ -16,23 +16,23 @@ public class ObjectRegistry {
 		this.collisionSystem = collisionSystem;
 	}
 
-	public <T extends GameObject> T instantiate(T object) {
+	public <T> T instantiate(T object) {
 		if (object instanceof Renderable r)
 			renderSystem.register(r);
 		if (object instanceof ITickable t)
 			tickSystem.register(t);
-
-		collisionSystem.register(object);
+		if (object instanceof GameObject g)
+			collisionSystem.register(g);
 
 		return object;
 	}
 
-	public <T extends GameObject> void destroy(T object) {
+	public <T> void destroy(T object) {
 		if (object instanceof Renderable r)
 			renderSystem.unregister(r);
 		if (object instanceof ITickable t)
 			tickSystem.unregister(t);
-
-		collisionSystem.unregister(object);
+		if (object instanceof GameObject g)
+			collisionSystem.unregister(g);
 	}
 }

@@ -1,38 +1,41 @@
 package dev.lucasfransson.shrinkmechanic.engine;
 
-public class Vector2Int extends Vector2 {
+public class Vector2Int {
+
+	private int x;
+	private int y;
 
 	public Vector2Int(int x, int y) {
-		super(x, y);
+		this.setX(x);
+		this.setY(y);
 	}
 
-	@Override
-	public double getX() {
-		return Math.floor(super.getX());
+	public int getX() {
+		return x;
 	}
 
-	public void setX(int x) {
-		super.setX(x);
+	private void setX(int x) {
+		this.x = x;
 	}
 
-	@Override
-	public double getY() {
-		return Math.floor(super.getY());
+	public int getY() {
+		return y;
 	}
 
-	public int getIntX() {
-		return (int) this.getX();
-	}
-
-	public int getIntY() {
-		return (int) this.getY();
-	}
-
-	public void setY(int y) {
-		super.setY(y);
+	private void setY(int y) {
+		this.y = y;
 	}
 
 	public static Vector2Int zero() {
 		return new Vector2Int(0, 0);
+	}
+
+	public Vector2Int subtract(Vector2Int position) {
+		return new Vector2Int(this.getX() - position.getX(),
+				this.getY() - position.getY());
+	}
+
+	public Vector2 convertToVector2() {
+		return new Vector2(x, y);
 	}
 }

@@ -17,7 +17,7 @@ public class Player extends Entity {
 		this.setSize(new Vector2(0.4, 0.2));
 		this.setRenderingLayer(1);
 		this.setHasCollision(true);
-		this.setSpriteAlignment(SpriteAlignment.BOTTOM);
+		this.setSpriteAlignment(SpriteAlignment.TOP);
 	}
 
 	@Override

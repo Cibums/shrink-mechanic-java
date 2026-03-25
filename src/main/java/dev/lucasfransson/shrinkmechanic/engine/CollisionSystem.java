@@ -3,8 +3,6 @@ package dev.lucasfransson.shrinkmechanic.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import dev.lucasfransson.shrinkmechanic.entities.Entity;
-
 public class CollisionSystem {
 
 	private final List<GameObject> collidables = new ArrayList<>();
@@ -12,8 +10,8 @@ public class CollisionSystem {
 	public void register(GameObject obj) {
 		if (obj.hasCollision()) {
 
-			if (obj instanceof Entity entity) {
-				entity.setCollisionSystem(this);
+			if (obj instanceof ICollisionAware c) {
+				c.setCollisionSystem(this);
 			}
 
 			collidables.add(obj);

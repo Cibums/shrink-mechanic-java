@@ -30,11 +30,9 @@ public class RenderSystem {
 
 	public List<Renderable> getRenderablesInRange(Vector2 center, double rangeX,
 			double rangeY) {
-		if (dirty) {
-			renderables.sort(Comparator
-					.comparingDouble(Renderable::getRenderingZOffset));
-			dirty = false;
-		}
+
+		renderables.sort(
+				Comparator.comparingDouble(Renderable::getRenderingZOffset));
 
 		return renderables.stream().filter(r -> {
 			Vector2 pos = r.getPosition();
@@ -43,24 +41,17 @@ public class RenderSystem {
 		}).toList();
 	}
 
-	private List<Renderable> getAnimatedRenderablesInRange(Vector2 center,
-			double rangeX, double rangeY) {
-		return getRenderablesInRange(center, rangeY, rangeY).stream()
-				.filter(a -> {
-					return !a.isPaused() && a.getCurrentAnimation() != null;
-				}).toList();
-	}
-
 	private double elapsedTime = 0.0;
 
-	public void updateAnimations(double deltaTime, Vector2 center,
-			double rangeX, double rangeY) {
+	public void updateAnimations(double deltaTime,
+			List<Renderable> renderables) {
 
 		elapsedTime += deltaTime;
 
-		for (Renderable r : getAnimatedRenderablesInRange(center, rangeX,
-				rangeY)) {
-			r.updateAnimationFrame(elapsedTime, deltaTime);
+		for (Renderable r : renderables) {
+			if (!r.isPaused() && r.getCurrentAnimation() != null) {
+				r.updateAnimationFrame(elapsedTime, deltaTime);
+			}
 		}
 	}
 }

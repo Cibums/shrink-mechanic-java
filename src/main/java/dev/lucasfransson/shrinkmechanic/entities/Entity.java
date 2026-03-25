@@ -2,12 +2,16 @@ package dev.lucasfransson.shrinkmechanic.entities;
 
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
 import dev.lucasfransson.shrinkmechanic.engine.GameObject;
+import dev.lucasfransson.shrinkmechanic.engine.ICollisionAware;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 import javafx.scene.image.Image;
 
-public abstract class Entity extends Renderable implements ITickable {
+public abstract class Entity extends Renderable
+		implements
+			ITickable,
+			ICollisionAware {
 
 	private CollisionSystem collisionSystem;
 

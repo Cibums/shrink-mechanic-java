@@ -13,7 +13,7 @@ public class Vector2 {
 		return x;
 	}
 
-	public void setX(double x) {
+	private void setX(double x) {
 		this.x = x;
 	}
 
@@ -21,7 +21,7 @@ public class Vector2 {
 		return y;
 	}
 
-	public void setY(double y) {
+	private void setY(double y) {
 		this.y = y;
 	}
 

@@ -1,6 +1,7 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javafx.scene.image.Image;
@@ -8,7 +9,7 @@ import javafx.scene.image.Image;
 public class Animation {
 
 	private double playTime;
-	private ArrayList<Image> clips = new ArrayList<>();
+	private List<Image> frames = new ArrayList<>();
 
 	public Animation(String directoryPath, double playTime) {
 
@@ -23,11 +24,11 @@ public class Animation {
 				break;
 			}
 
-			clips.add(new Image(resource.toExternalForm()));
+			frames.add(new Image(resource.toExternalForm()));
 			index++;
 		}
 
-		if (clips.isEmpty()) {
+		if (frames.isEmpty()) {
 			throw new IllegalArgumentException(
 					"No animation frames found in: " + directoryPath);
 		}
@@ -39,11 +40,11 @@ public class Animation {
 		return playTime;
 	}
 
-	public List<Image> getClips() {
-		return clips;
+	public List<Image> getFrames() {
+		return Collections.unmodifiableList(frames);
 	}
 
 	public double getTimeBetweenFrames() {
-		return this.playTime / this.getClips().size();
+		return this.playTime / this.getFrames().size();
 	}
 }
