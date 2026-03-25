@@ -7,7 +7,7 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 public class RemotePlayer extends Renderable {
 	public RemotePlayer() {
 		super(Renderable.getTextureFromPath("/player.png"));
-		this.setSize(new Vector2(0.4, 0.2));
+		this.setSize(new Vector2(0.2, 0.2));
 		this.setRenderingLayer(1);
 		this.setSpriteAlignment(SpriteAlignment.TOP);
 	}

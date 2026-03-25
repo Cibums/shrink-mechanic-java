@@ -14,7 +14,7 @@ public class Player extends Entity {
 	public Player(InputManager input) {
 		super(Renderable.getTextureFromPath("/player.png"));
 		this.input = input;
-		this.setSize(new Vector2(0.4, 0.2));
+		this.setSize(new Vector2(0.2, 0.2));
 		this.setRenderingLayer(1);
 		this.setHasCollision(true);
 		this.setSpriteAlignment(SpriteAlignment.TOP);

@@ -6,6 +6,7 @@ import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.objects.IRandomizable;
 import dev.lucasfransson.shrinkmechanic.world.objects.Rock;
 import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
@@ -51,6 +52,9 @@ public class Chunk {
 						objects[lx][ly] = new Tree();
 					} else if (rnd.nextDouble() < 0.1) {
 						objects[lx][ly] = new Rock();
+					}
+					if (objects[lx][ly] instanceof IRandomizable r) {
+						r.randomize(rnd);
 					}
 				} else {
 					tiles[lx][ly] = new WaterTile();
