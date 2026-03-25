@@ -40,7 +40,7 @@ public class Main extends Application {
 		Player player = registry.instantiate(new Player(input));
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, player, input);
 
-		GameLoop loop = new GameLoop(canvas, tickSystem);
+		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, player);
 		loop.start();
 
 		layout.getChildren().add(canvas);

@@ -1,10 +1,12 @@
 package dev.lucasfransson.shrinkmechanic.world.tiles;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Animation;
 
 public class WaterTile extends LiquidTile {
 
+	public static final Animation water = new Animation("/water", 1.0);
+
 	public WaterTile() {
-		super(Renderable.getTextureFromPath("/water.png"));
+		super(water);
 	}
 
 	@Override

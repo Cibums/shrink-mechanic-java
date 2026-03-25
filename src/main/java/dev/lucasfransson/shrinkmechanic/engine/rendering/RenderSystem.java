@@ -42,4 +42,25 @@ public class RenderSystem {
 					&& Math.abs(pos.getY() - center.getY()) <= rangeY;
 		}).toList();
 	}
+
+	private List<Renderable> getAnimatedRenderablesInRange(Vector2 center,
+			double rangeX, double rangeY) {
+		return getRenderablesInRange(center, rangeY, rangeY).stream()
+				.filter(a -> {
+					return !a.isPaused() && a.getCurrentAnimation() != null;
+				}).toList();
+	}
+
+	private double elapsedTime = 0.0;
+
+	public void updateAnimations(double deltaTime, Vector2 center,
+			double rangeX, double rangeY) {
+
+		elapsedTime += deltaTime;
+
+		for (Renderable r : getAnimatedRenderablesInRange(center, rangeX,
+				rangeY)) {
+			r.updateAnimationFrame(elapsedTime, deltaTime);
+		}
+	}
 }

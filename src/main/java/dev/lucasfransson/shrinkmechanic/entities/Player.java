@@ -3,6 +3,7 @@ package dev.lucasfransson.shrinkmechanic.entities;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 import javafx.scene.input.KeyCode;
 
 public class Player extends Entity {
@@ -13,9 +14,10 @@ public class Player extends Entity {
 	public Player(InputManager input) {
 		super(Renderable.getTextureFromPath("/player.png"));
 		this.input = input;
-		this.setSize(new Vector2(0.4, 0.8));
+		this.setSize(new Vector2(0.4, 0.2));
 		this.setRenderingLayer(1);
 		this.setHasCollision(true);
+		this.setSpriteAlignment(SpriteAlignment.BOTTOM);
 	}
 
 	@Override

@@ -96,7 +96,13 @@ public class GameCanvas extends Canvas {
 			double spriteX = cellX + ((grid * zoom) - spriteW) / 2.0;
 			double spriteY = cellY - (r.getSpriteYOffset() * zoom);
 
-			gc.drawImage(r.getTexture(), spriteX, spriteY, spriteW, spriteH);
+			if (r.getFlipX()) {
+				gc.drawImage(r.getTexture(), spriteX + spriteW, spriteY,
+						-spriteW, spriteH);
+			} else {
+				gc.drawImage(r.getTexture(), spriteX, spriteY, spriteW,
+						spriteH);
+			}
 
 			if (debugMode) {
 				double collW = size.getX() * grid * zoom;
@@ -123,6 +129,10 @@ public class GameCanvas extends Canvas {
 		gc.strokeLine(x, y + h, x, y + h - len);
 		gc.strokeLine(x + w, y + h, x + w - len, y + h);
 		gc.strokeLine(x + w, y + h, x + w, y + h - len);
+	}
+
+	public double getZoom() {
+		return zoom;
 	}
 
 	public double getCanvasWidth() {

@@ -11,11 +11,16 @@ public abstract class Entity extends Renderable implements ITickable {
 
 	private CollisionSystem collisionSystem;
 
-	public Entity(Image texture) {
+	protected Entity(Image texture) {
 		super(texture);
 	}
 
 	protected void moveWithCollision(double dx, double dy, double deltaTime) {
+
+		if (dx != 0) {
+			this.setFlipX(dx < 0);
+		}
+
 		moveHorizontally(dx * deltaTime);
 		if (isCollidingWithAny()) {
 			moveHorizontally(-dx * deltaTime);
@@ -30,7 +35,6 @@ public abstract class Entity extends Renderable implements ITickable {
 	private boolean isCollidingWithAny() {
 
 		if (collisionSystem == null) {
-			System.out.println("Collision System is null");
 			return false;
 		}
 
