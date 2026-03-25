@@ -12,8 +12,9 @@ public abstract class Tile extends Renderable {
 						.toExternalForm())
 				: texture);
 
-		this.setSize(new Vector2(32, 32));
+		this.setSize(new Vector2(1.0, 1.0));
 		this.setSpriteAlignment(SpriteAlignment.TOP);
+		this.setHasCollision(false);
 	}
 
 	public abstract void onDestroy();

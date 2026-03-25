@@ -5,7 +5,6 @@ public class WaterTile extends LiquidTile {
 
 	public WaterTile() {
 		super(Renderable.getTextureFromPath("/water.png"));
-		this.setHasCollision(true);
 	}
 
 	@Override

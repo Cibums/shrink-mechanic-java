@@ -11,8 +11,9 @@ public abstract class WorldObject extends Renderable {
 				? new Image(Renderable.class.getResource("/default.png")
 						.toExternalForm())
 				: texture);
-		this.setSize(new Vector2(10, 10));
+		this.setSize(new Vector2(0.3125, 0.3125));
 		this.setRenderingLayer(1);
+		this.setHasCollision(true);
 	}
 
 	public abstract void onDestroy();

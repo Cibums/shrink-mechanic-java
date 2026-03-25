@@ -1,5 +1,6 @@
 package dev.lucasfransson.shrinkmechanic.core;
 
+import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
@@ -30,7 +31,9 @@ public class Main extends Application {
 
 		TickSystem tickSystem = new TickSystem();
 		RenderSystem renderSystem = new RenderSystem();
-		ObjectRegistry registry = new ObjectRegistry(tickSystem, renderSystem);
+		CollisionSystem collisionSystem = new CollisionSystem();
+		ObjectRegistry registry = new ObjectRegistry(tickSystem, renderSystem,
+				collisionSystem);
 
 		GameWorld world = new GameWorld(100, registry);
 		GameState state = new GameState(world);

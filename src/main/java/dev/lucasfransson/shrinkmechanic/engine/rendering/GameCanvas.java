@@ -99,8 +99,8 @@ public class GameCanvas extends Canvas {
 			gc.drawImage(r.getTexture(), spriteX, spriteY, spriteW, spriteH);
 
 			if (debugMode) {
-				double collW = size.getX() * zoom;
-				double collH = size.getY() * zoom;
+				double collW = size.getX() * grid * zoom;
+				double collH = size.getY() * grid * zoom;
 				double collX = cellX + ((grid * zoom) - collW) / 2.0;
 				double collY = cellY + ((grid * zoom) - collH) / 2.0;
 

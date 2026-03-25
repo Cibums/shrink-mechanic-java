@@ -9,7 +9,7 @@ public class Tree extends WorldObject {
 	public Tree() {
 		super(Renderable.getTextureFromPath("/tree.png"));
 		this.setSpriteAlignment(SpriteAlignment.BOTTOM);
-		this.setSize(new Vector2(8, 6));
+		this.setSize(new Vector2(0.25, 0.1875));
 	}
 
 	@Override

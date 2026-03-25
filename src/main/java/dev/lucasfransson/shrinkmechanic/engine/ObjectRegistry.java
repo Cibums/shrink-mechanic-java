@@ -7,10 +7,13 @@ import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
 public class ObjectRegistry {
 	private final TickSystem tickSystem;
 	private final RenderSystem renderSystem;
+	private final CollisionSystem collisionSystem;
 
-	public ObjectRegistry(TickSystem tickSystem, RenderSystem renderSystem) {
+	public ObjectRegistry(TickSystem tickSystem, RenderSystem renderSystem,
+			CollisionSystem collisionSystem) {
 		this.tickSystem = tickSystem;
 		this.renderSystem = renderSystem;
+		this.collisionSystem = collisionSystem;
 	}
 
 	public <T extends GameObject> T instantiate(T object) {
@@ -18,6 +21,9 @@ public class ObjectRegistry {
 			renderSystem.register(r);
 		if (object instanceof ITickable t)
 			tickSystem.register(t);
+
+		collisionSystem.register(object);
+
 		return object;
 	}
 
@@ -26,5 +32,7 @@ public class ObjectRegistry {
 			renderSystem.unregister(r);
 		if (object instanceof ITickable t)
 			tickSystem.unregister(t);
+
+		collisionSystem.unregister(object);
 	}
 }

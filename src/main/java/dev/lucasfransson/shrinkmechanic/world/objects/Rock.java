@@ -9,7 +9,7 @@ public class Rock extends WorldObject {
 	public Rock() {
 		super(Renderable.getTextureFromPath("/rock.png"));
 		this.setSpriteAlignment(SpriteAlignment.CENTER);
-		this.setSize(new Vector2(12, 8));
+		this.setSize(new Vector2(0.375, 0.25));
 	}
 
 	@Override

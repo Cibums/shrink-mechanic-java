@@ -10,5 +10,6 @@ public abstract class LiquidTile extends Tile {
 				: texture);
 
 		this.setSpriteYOffset(-8);
+		this.setHasCollision(true);
 	}
 }

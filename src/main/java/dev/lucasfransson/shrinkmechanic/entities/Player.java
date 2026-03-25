@@ -1,40 +1,37 @@
 package dev.lucasfransson.shrinkmechanic.entities;
+
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
-import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 import javafx.scene.input.KeyCode;
 
-public class Player extends Renderable implements ITickable {
+public class Player extends Entity {
 
-	private InputManager input;
+	private final InputManager input;
 	private double walkSpeed = 3;
 
 	public Player(InputManager input) {
 		super(Renderable.getTextureFromPath("/player.png"));
 		this.input = input;
-		this.setSize(new Vector2(32, 32));
+		this.setSize(new Vector2(0.4, 0.8));
 		this.setRenderingLayer(1);
+		this.setHasCollision(true);
 	}
 
 	@Override
 	public void update(double deltaTime) {
+		double dx = 0, dy = 0;
 
-		if (input.isKeyHeld(KeyCode.W)) {
-			this.moveVertically(walkSpeed * deltaTime);
-		}
+		if (input.isKeyHeld(KeyCode.W))
+			dy += walkSpeed;
+		if (input.isKeyHeld(KeyCode.S))
+			dy -= walkSpeed;
+		if (input.isKeyHeld(KeyCode.A))
+			dx -= walkSpeed;
+		if (input.isKeyHeld(KeyCode.D))
+			dx += walkSpeed;
 
-		if (input.isKeyHeld(KeyCode.S)) {
-			this.moveVertically(-walkSpeed * deltaTime);
-		}
-
-		if (input.isKeyHeld(KeyCode.A)) {
-			this.moveHorizontally(-walkSpeed * deltaTime);
-		}
-
-		if (input.isKeyHeld(KeyCode.D)) {
-			this.moveHorizontally(walkSpeed * deltaTime);
-		}
+		moveWithCollision(dx, dy, deltaTime);
 	}
 
 	public void setWalkSpeed(double walkSpeed) {

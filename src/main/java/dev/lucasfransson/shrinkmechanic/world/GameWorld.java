@@ -37,7 +37,7 @@ public class GameWorld {
 		PerlinNoise forestPerlinNoise = new PerlinNoise();
 
 		double scale = 0.1;
-		double threshold = 0.0;
+		double threshold = -0.3;
 
 		for (int x = 0; x < worldSize; x++) {
 			for (int y = 0; y < worldSize; y++) {
