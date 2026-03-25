@@ -8,6 +8,7 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
+import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import javafx.animation.AnimationTimer;
 
 public class GameLoop extends AnimationTimer {
@@ -16,13 +17,15 @@ public class GameLoop extends AnimationTimer {
 	private final TickSystem tickSystem;
 	private final RenderSystem renderSystem;
 	private final Camera camera;
+	private final GameWorld world;
 
 	public GameLoop(GameCanvas canvas, TickSystem tickSystem,
-			RenderSystem renderSystem, Camera camera) {
+			RenderSystem renderSystem, Camera camera, GameWorld world) {
 		this.canvas = canvas;
 		this.tickSystem = tickSystem;
 		this.renderSystem = renderSystem;
 		this.camera = camera;
+		this.world = world;
 	}
 
 	private long lastUpdate = System.nanoTime();
@@ -33,6 +36,7 @@ public class GameLoop extends AnimationTimer {
 		lastUpdate = now;
 
 		tickSystem.update(deltaTime);
+		world.updateChunks(camera.getPosition());
 
 		double rangeX = canvas.getCanvasWidth()
 				/ (GameConfig.GRID_CELL_SIZE * canvas.getZoom());

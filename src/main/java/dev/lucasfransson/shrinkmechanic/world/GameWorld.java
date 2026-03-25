@@ -1,164 +1,149 @@
 package dev.lucasfransson.shrinkmechanic.world;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
+import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
-import dev.lucasfransson.shrinkmechanic.world.objects.Rock;
-import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
-import dev.lucasfransson.shrinkmechanic.world.tiles.GrassTile;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
-import dev.lucasfransson.shrinkmechanic.world.tiles.WaterTile;
 
 public class GameWorld {
 
-	private ObjectRegistry registry;
+	private final ObjectRegistry registry;
+	private WorldEventListener eventListener;
+	private final Map<ChunkCoord, Chunk> chunks = new HashMap<>();
+	private final Set<ChunkCoord> activeChunks = new HashSet<>();
+	private final PerlinNoise groundNoise;
+	private final PerlinNoise forestNoise;
+	private final long worldSeed;
 
-	private Tile[][] ground;
-	private WorldObject[][] worldObjects;
-	private int worldSize;
+	private ChunkCoord lastPlayerChunk = null;
 
-	public GameWorld(int worldSize, ObjectRegistry registry) {
-
+	public GameWorld(ObjectRegistry registry) {
 		this.registry = registry;
-		this.worldSize = worldSize;
-		ground = new Tile[worldSize][worldSize];
-		worldObjects = new WorldObject[worldSize][worldSize];
-
-		generateWorld();
+		this.worldSeed = new Random().nextLong();
+		this.groundNoise = new PerlinNoise(worldSeed);
+		this.forestNoise = new PerlinNoise(worldSeed + 1);
 	}
 
-	private void generateWorld() {
+	public GameWorld(ObjectRegistry registry, long seed) {
+		this.registry = registry;
+		this.worldSeed = seed;
+		this.groundNoise = new PerlinNoise(worldSeed);
+		this.forestNoise = new PerlinNoise(worldSeed + 1);
+	}
 
-		PerlinNoise groundPerlinNoise = new PerlinNoise();
-		PerlinNoise forestPerlinNoise = new PerlinNoise();
+	public void updateChunks(Vector2 playerPos) {
+		ChunkCoord current = ChunkCoord.fromWorldPos(playerPos.getX(),
+				playerPos.getY());
 
-		double scale = 0.1;
-		double threshold = -0.3;
+		if (current.equals(lastPlayerChunk)) {
+			return;
+		}
+		lastPlayerChunk = current;
 
-		Random rnd = new Random();
+		int radius = GameConfig.CHUNK_LOAD_RADIUS;
 
-		for (int x = 0; x < worldSize; x++) {
-			for (int y = 0; y < worldSize; y++) {
+		Set<ChunkCoord> shouldBeLoaded = new HashSet<>();
+		for (int dx = -radius; dx <= radius; dx++) {
+			for (int dy = -radius; dy <= radius; dy++) {
+				shouldBeLoaded.add(
+						new ChunkCoord(current.x() + dx, current.y() + dy));
+			}
+		}
 
-				double noiseValue = groundPerlinNoise.perlin(x * scale,
-						y * scale);
+		List<ChunkCoord> toUnload = new ArrayList<>();
+		for (ChunkCoord coord : activeChunks) {
+			if (!shouldBeLoaded.contains(coord)) {
+				toUnload.add(coord);
+			}
+		}
+		for (ChunkCoord coord : toUnload) {
+			chunks.get(coord).unload(registry);
+			activeChunks.remove(coord);
+		}
 
-				if (noiseValue > threshold) {
-					addTileToWorld(new GrassTile(), new Vector2Int(x, y));
-
-					double forestNoiseValue = forestPerlinNoise
-							.perlin(x * scale, y * scale);
-
-					if (forestNoiseValue > threshold && rnd.nextDouble() <= 0.7f
-							&& (x != 0 && y != 0)) {
-						addWorldObjectToWorld(new Tree(), new Vector2Int(x, y));
-					}
-
-					if (rnd.nextDouble() < 0.1f) {
-						addWorldObjectToWorld(new Rock(), new Vector2Int(x, y),
-								ReplacementMode.KEEP);
-					}
-
-				} else {
-					addTileToWorld(new WaterTile(), new Vector2Int(x, y));
+		for (ChunkCoord coord : shouldBeLoaded) {
+			if (!activeChunks.contains(coord)) {
+				if (!chunks.containsKey(coord)) {
+					chunks.put(coord, new Chunk(coord, groundNoise, forestNoise,
+							worldSeed));
 				}
-
+				chunks.get(coord).load(registry);
+				activeChunks.add(coord);
 			}
 		}
 	}
 
-	public void addWorldObjectToWorld(WorldObject object, Vector2Int position) {
-		addWorldObjectToWorld(object, position, ReplacementMode.REPLACE);
-	}
-
-	public void addWorldObjectToWorld(WorldObject object, Vector2Int position,
-			ReplacementMode replacementMode) {
-		object.setPosition(position);
-
-		int x = position.getX();
-		int y = position.getY();
-
-		switch (replacementMode) {
-			case ReplacementMode.KEEP :
-
-				if (worldObjects[x][y] != null) {
-					return;
-				}
-
-				break;
-			case ReplacementMode.DESTROY :
-				destroyWorldObject(position);
-				break;
-			default :
-				break;
-		}
-
-		if (worldObjects[x][y] != null) {
-			registry.destroy(worldObjects[x][y]);
-		}
-
-		worldObjects[x][y] = object;
-		registry.instantiate(object);
-	}
-
 	public void destroyWorldObject(Vector2Int position) {
-		worldObjects[position.getX()][position.getY()].onDestroy();
-		registry.destroy(worldObjects[position.getX()][position.getY()]);
-		worldObjects[position.getX()][position.getY()] = null;
-	}
-
-	public void addTileToWorld(Tile tile, Vector2Int position) {
-		addTileToWorld(tile, position, ReplacementMode.REPLACE);
-	}
-
-	public void addTileToWorld(Tile tile, Vector2Int position,
-			ReplacementMode replacementMode) {
-
-		tile.setPosition(position);
-
-		int x = position.getX();
-		int y = position.getY();
-
-		switch (replacementMode) {
-			case ReplacementMode.KEEP :
-
-				if (ground[x][y] != null) {
-					return;
-				}
-
-				break;
-			case ReplacementMode.DESTROY :
-				destroyTile(position);
-				break;
-			default :
-				break;
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+		if (chunk != null) {
+			chunk.destroyObject(localCoord(position.getX()),
+					localCoord(position.getY()), registry);
 		}
 
-		if (ground[x][y] != null) {
-			registry.destroy(ground[x][y]);
-		}
-
-		ground[x][y] = tile;
-		registry.instantiate(tile);
+		if (eventListener != null)
+			eventListener.onWorldObjectDestroyed(position);
 	}
 
 	public void destroyTile(Vector2Int position) {
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+		if (chunk != null) {
+			chunk.destroyTile(localCoord(position.getX()),
+					localCoord(position.getY()), registry);
+		}
 
-		int x = position.getX();
-		int y = position.getY();
-
-		ground[x][y].onDestroy();
-		registry.destroy(ground[x][y]);
-		ground[x][y] = null;
+		if (eventListener != null)
+			eventListener.onTileDestroyed(position);
 	}
 
-	public Tile[][] getGround() {
-		return ground;
+	public void placeWorldObject(Vector2Int position, WorldObject object,
+			ReplacementMode mode) {
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+		if (chunk != null) {
+			chunk.placeWorldObject(localCoord(position.getX()),
+					localCoord(position.getY()), object,
+					activeChunks.contains(coord) ? registry : null, mode);
+		}
+
+		if (eventListener != null)
+			eventListener.onWorldObjectPlaced(position, object);
 	}
 
-	public int getWorldSize() {
-		return worldSize;
+	public void placeTile(Vector2Int position, Tile tile, ReplacementMode mode) {
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+		if (chunk != null) {
+			chunk.placeTile(localCoord(position.getX()),
+					localCoord(position.getY()), tile,
+					activeChunks.contains(coord) ? registry : null, mode);
+		}
+
+		if (eventListener != null)
+			eventListener.onTilePlaced(position, tile);
+	}
+
+	private ChunkCoord toChunkCoord(Vector2Int pos) {
+		return new ChunkCoord(Math.floorDiv(pos.getX(), GameConfig.CHUNK_SIZE),
+				Math.floorDiv(pos.getY(), GameConfig.CHUNK_SIZE));
+	}
+
+	private int localCoord(int worldCoord) {
+		return Math.floorMod(worldCoord, GameConfig.CHUNK_SIZE);
+	}
+
+	public void setEventListener(WorldEventListener listener) {
+		this.eventListener = listener;
 	}
 }

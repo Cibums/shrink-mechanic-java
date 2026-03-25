@@ -36,12 +36,13 @@ public class Main extends Application {
 		ObjectRegistry registry = new ObjectRegistry(tickSystem, renderSystem,
 				collisionSystem);
 
-		GameWorld world = new GameWorld(100, registry);
+		GameWorld world = new GameWorld(registry);
 		Player player = registry.instantiate(new Player(input));
 		Camera camera = registry.instantiate(new Camera(player));
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera, input);
 
-		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, camera);
+		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, camera,
+				world);
 		loop.start();
 
 		layout.getChildren().add(canvas);
