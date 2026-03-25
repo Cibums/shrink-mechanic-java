@@ -13,6 +13,7 @@ public abstract class WorldObject extends Renderable {
 				: texture);
 		this.setSize(new Vector2(10, 10));
 		this.setRenderingLayer(1);
+		this.setHasCollision(true);
 	}
 
 	public abstract void onDestroy();

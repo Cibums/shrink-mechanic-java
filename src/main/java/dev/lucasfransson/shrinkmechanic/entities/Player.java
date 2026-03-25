@@ -5,7 +5,7 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 import javafx.scene.input.KeyCode;
 
-public class Player extends Renderable implements ITickable {
+public class Player extends Entity implements ITickable {
 
 	private InputManager input;
 	private double walkSpeed = 3;

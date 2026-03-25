@@ -33,4 +33,10 @@ public class Vector2 {
 		return new Vector2(this.getX() - position.getX(),
 				this.getY() - position.getY());
 	}
+
+	public double distance(Vector2 position) {
+		double dx = this.getX() - position.getX();
+		double dy = this.getY() - position.getY();
+		return Math.sqrt(dx * dx + dy * dy);
+	}
 }

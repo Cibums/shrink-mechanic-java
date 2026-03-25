@@ -1,10 +1,14 @@
 package dev.lucasfransson.shrinkmechanic.engine;
 
+import dev.lucasfransson.shrinkmechanic.world.GameWorld;
+
 public class GameObject {
 
 	private Vector2 position;
 	private Vector2 size;
 	private boolean hasCollision = false;
+
+	private GameWorld world;
 
 	public GameObject() {
 		this(Vector2.zero());
@@ -27,23 +31,6 @@ public class GameObject {
 		this.position = position;
 	}
 
-	public void moveHorizontally(double speed) {
-		this.move(speed, 0);
-	}
-
-	public void moveVertically(double speed) {
-		this.move(0, speed);
-	}
-
-	public void move(double x, double y) {
-		this.move(new Vector2(x, y));
-	}
-
-	public void move(Vector2 vector) {
-		this.position = new Vector2(this.position.getX() + vector.getX(),
-				this.position.getY() + vector.getY());
-	}
-
 	public boolean hasCollision() {
 		return hasCollision;
 	}
@@ -58,5 +45,13 @@ public class GameObject {
 
 	public void setSize(Vector2 size) {
 		this.size = size;
+	}
+
+	public GameWorld getWorld() {
+		return world;
+	}
+
+	public void setWorld(GameWorld world) {
+		this.world = world;
 	}
 }

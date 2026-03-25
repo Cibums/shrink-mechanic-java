@@ -5,7 +5,6 @@ import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
 import dev.lucasfransson.shrinkmechanic.world.objects.Rock;
-import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.GrassTile;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
@@ -25,6 +24,9 @@ public class GameWorld {
 
 		this.registry = registry;
 		this.worldSize = worldSize;
+
+		registry.setWorld(this);
+
 		ground = new Tile[worldSize][worldSize];
 		worldObjects = new WorldObject[worldSize][worldSize];
 
@@ -37,7 +39,7 @@ public class GameWorld {
 		PerlinNoise forestPerlinNoise = new PerlinNoise();
 
 		double scale = 0.1;
-		double threshold = 0.0;
+		double threshold = -1.0;
 
 		for (int x = 0; x < worldSize; x++) {
 			for (int y = 0; y < worldSize; y++) {
@@ -55,7 +57,8 @@ public class GameWorld {
 
 					if (forestNoiseValue > threshold
 							&& rnd.nextDouble() <= 0.7f) {
-						addWorldObjectToWorld(new Tree(), new Vector2Int(x, y));
+						// addWorldObjectToWorld(new Tree(), new Vector2Int(x,
+						// y));
 					}
 
 					if (rnd.nextDouble() < 0.1f) {
@@ -150,5 +153,35 @@ public class GameWorld {
 
 	public int getWorldSize() {
 		return worldSize;
+	}
+
+	public Tile getTile(int x, int y) {
+		if (x < 0 || y < 0 || x >= worldSize || y >= worldSize) {
+			return null;
+		}
+		return ground[x][y];
+	}
+
+	public WorldObject getWorldObject(int x, int y) {
+		if (x < 0 || y < 0 || x >= worldSize || y >= worldSize) {
+			return null;
+		}
+		return worldObjects[x][y];
+	}
+
+	public boolean isBlocked(int x, int y) {
+		Tile tile = getTile(x, y);
+		WorldObject obj = getWorldObject(x, y);
+
+		if (tile != null && tile.hasCollision())
+			return true;
+		if (obj != null && obj.hasCollision())
+			return true;
+
+		return false;
+	}
+
+	public ObjectRegistry getRegistry() {
+		return registry;
 	}
 }

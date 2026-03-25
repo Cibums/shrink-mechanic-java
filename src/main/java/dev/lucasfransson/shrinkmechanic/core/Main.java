@@ -31,9 +31,10 @@ public class Main extends Application {
 		TickSystem tickSystem = new TickSystem();
 		RenderSystem renderSystem = new RenderSystem();
 		ObjectRegistry registry = new ObjectRegistry(tickSystem, renderSystem);
-
 		GameWorld world = new GameWorld(100, registry);
+
 		GameState state = new GameState(world);
+
 		Player player = registry.instantiate(new Player(input));
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, player, input);
 

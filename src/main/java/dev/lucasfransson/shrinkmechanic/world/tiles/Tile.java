@@ -14,6 +14,7 @@ public abstract class Tile extends Renderable {
 
 		this.setSize(new Vector2(32, 32));
 		this.setSpriteAlignment(SpriteAlignment.TOP);
+		this.setHasCollision(false);
 	}
 
 	public abstract void onDestroy();
