@@ -61,6 +61,10 @@ public class Chunk {
 						r.randomize(rnd);
 					}
 
+					if (tiles[lx][ly] instanceof IRandomizable r) {
+						r.randomize(rnd);
+					}
+
 				} else {
 					tiles[lx][ly] = new WaterTile();
 				}

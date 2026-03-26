@@ -81,13 +81,13 @@ public class GameCanvas extends Canvas {
 			Vector2 offset = pos.subtract(playerPosition);
 			int grid = GameConfig.GRID_CELL_SIZE;
 
-			double cellX = (offset.getX() * grid * zoom) + (canvasWidth / 2.0)
+			double cellX = (offset.x() * grid * zoom) + (canvasWidth / 2.0)
 					- ((grid * zoom) / 2.0);
-			double cellY = (-offset.getY() * grid * zoom) + (canvasHeight / 2.0)
+			double cellY = (-offset.y() * grid * zoom) + (canvasHeight / 2.0)
 					- ((grid * zoom) / 2.0);
 
-			double spriteW = s.getSpriteSize().getX() * zoom;
-			double spriteH = s.getSpriteSize().getY() * zoom;
+			double spriteW = s.getSpriteSize().x() * zoom;
+			double spriteH = s.getSpriteSize().y() * zoom;
 			double spriteX = cellX + ((grid * zoom) - spriteW) / 2.0;
 			double spriteY = cellY - (s.getSpriteYOffset() * zoom);
 
@@ -126,11 +126,11 @@ public class GameCanvas extends Canvas {
 
 	public Vector2Int screenToWorld(Vector2 screenPos) {
 		int grid = GameConfig.GRID_CELL_SIZE;
-		double worldX = camera.getPosition().getX()
-				+ (screenPos.getX() - canvasWidth / 2.0 + (grid * zoom) / 2.0)
+		double worldX = camera.getPosition().x()
+				+ (screenPos.x() - canvasWidth / 2.0 + (grid * zoom) / 2.0)
 						/ (grid * zoom);
-		double worldY = camera.getPosition().getY()
-				- (screenPos.getY() - canvasHeight / 2.0 + (grid * zoom) / 2.0)
+		double worldY = camera.getPosition().y()
+				- (screenPos.y() - canvasHeight / 2.0 + (grid * zoom) / 2.0)
 						/ (grid * zoom);
 		return new Vector2Int((int) Math.floor(worldX),
 				(int) Math.ceil(worldY));

@@ -1,37 +1,29 @@
 package dev.lucasfransson.shrinkmechanic.engine;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
-import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
-import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
+
+import java.util.List;
 
 public class ObjectRegistry {
-	private final TickSystem tickSystem;
-	private final RenderSystem renderSystem;
-	private final CollisionSystem collisionSystem;
 
-	public ObjectRegistry(TickSystem tickSystem, RenderSystem renderSystem,
-			CollisionSystem collisionSystem) {
-		this.tickSystem = tickSystem;
-		this.renderSystem = renderSystem;
-		this.collisionSystem = collisionSystem;
+	private final List<IGameSystem> systems;
+
+	public ObjectRegistry(IGameSystem... systems) {
+		this.systems = List.of(systems);
 	}
 
 	public <T> T instantiate(T object) {
-		if (object instanceof IRenderable r)
-			renderSystem.register(r);
-		if (object instanceof ITickable t)
-			tickSystem.register(t);
-		if (object instanceof GameObject g)
-			collisionSystem.register(g);
+		for (IGameSystem system : systems) {
+			system.tryRegister(object);
+		}
 		return object;
 	}
 
 	public <T> void destroy(T object) {
-		if (object instanceof IRenderable r)
-			renderSystem.unregister(r);
-		if (object instanceof ITickable t)
-			tickSystem.unregister(t);
-		if (object instanceof GameObject g)
-			collisionSystem.unregister(g);
+		for (IGameSystem system : systems) {
+			system.tryUnregister(object);
+		}
+	}
+
+	public void addGameSystem(IGameSystem system) {
+		systems.add(system);
 	}
 }

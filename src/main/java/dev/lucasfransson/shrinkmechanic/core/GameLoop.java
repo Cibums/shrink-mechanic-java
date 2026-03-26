@@ -2,6 +2,7 @@ package dev.lucasfransson.shrinkmechanic.core;
 
 import java.util.List;
 
+import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
@@ -21,16 +22,18 @@ public class GameLoop extends AnimationTimer {
 	private final GameCanvas canvas;
 	private final TickSystem tickSystem;
 	private final RenderSystem renderSystem;
+	private final CollisionSystem collisionSystem;
 	private final Camera camera;
 	private final GameWorld world;
 	private final InputManager input;
 
 	public GameLoop(GameCanvas canvas, TickSystem tickSystem,
-			RenderSystem renderSystem, Camera camera, GameWorld world,
-			InputManager input) {
+			RenderSystem renderSystem, CollisionSystem collisionSystem,
+			Camera camera, GameWorld world, InputManager input) {
 		this.canvas = canvas;
 		this.tickSystem = tickSystem;
 		this.renderSystem = renderSystem;
+		this.collisionSystem = collisionSystem;
 		this.camera = camera;
 		this.world = world;
 		this.input = input;
@@ -56,6 +59,7 @@ public class GameLoop extends AnimationTimer {
 			world.destroyWorldObject(tile);
 		}
 
+		collisionSystem.updateDynamicPositions();
 		tickSystem.update(deltaTime);
 		world.updateChunks(camera.getPosition());
 

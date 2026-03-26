@@ -1,15 +1,32 @@
 package dev.lucasfransson.shrinkmechanic.engine.tick;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class TickSystem {
+import dev.lucasfransson.shrinkmechanic.engine.IGameSystem;
+
+public class TickSystem implements IGameSystem {
+
 	private final List<ITickable> tickables = new ArrayList<>();
 
 	public void register(ITickable t) {
 		tickables.add(t);
 	}
+
 	public void unregister(ITickable t) {
 		tickables.remove(t);
+	}
+
+	@Override
+	public void tryRegister(Object object) {
+		if (object instanceof ITickable t)
+			register(t);
+	}
+
+	@Override
+	public void tryUnregister(Object object) {
+		if (object instanceof ITickable t)
+			unregister(t);
 	}
 
 	public void update(double deltaTime) {

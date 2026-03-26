@@ -17,7 +17,7 @@ public class Tree extends WorldObject implements IRandomizable {
 	@Override
 	public void randomize(Random rnd) {
 		getMainSprite().setFlipX(rnd.nextBoolean());
-		applyColorOffsetRandomization(rnd, 0.1);
+		getMainSprite().randomizeColorOffset(rnd, 0.15);
 		applyPositionRandomization(rnd, 0.2);
 		applySizeRandomization(rnd, 0.9, 1.1);
 	}

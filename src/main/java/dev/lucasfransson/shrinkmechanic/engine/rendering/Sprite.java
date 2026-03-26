@@ -97,8 +97,7 @@ public class Sprite {
 	// --- Size / Offset / Scale ---
 
 	public Vector2 getSpriteSize() {
-		return new Vector2(spriteSize.getX() * scale,
-				spriteSize.getY() * scale);
+		return new Vector2(spriteSize.x() * scale, spriteSize.y() * scale);
 	}
 
 	public double getSpriteYOffset() {
@@ -205,6 +204,22 @@ public class Sprite {
 
 	public Color getTint() {
 		return tint;
+	}
+
+	public void randomizeTint(Random rnd, Color... colors) {
+		setTint(colors[rnd.nextInt(colors.length)]);
+	}
+
+	public void randomizeColorOffset(Random rnd, double colorRange) {
+		Color base = tint != null ? tint : Color.WHITE;
+		double r = Math.clamp(
+				base.getRed() + (rnd.nextDouble() * 2 - 1) * colorRange, 0, 1);
+		double g = Math.clamp(
+				base.getGreen() + (rnd.nextDouble() * 2 - 1) * colorRange, 0,
+				1);
+		double b = Math.clamp(
+				base.getBlue() + (rnd.nextDouble() * 2 - 1) * colorRange, 0, 1);
+		setTint(new Color(r, g, b, 1.0));
 	}
 
 	public static Image applyTint(Image source, Color tint) {

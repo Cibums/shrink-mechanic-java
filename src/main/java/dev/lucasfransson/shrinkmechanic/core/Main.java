@@ -44,8 +44,8 @@ public class Main extends Application {
 
 		registry.instantiate(new Cursor(input, canvas));
 
-		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, camera,
-				world, input);
+		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem,
+				collisionSystem, camera, world, input);
 		loop.start();
 
 		layout.getChildren().add(canvas);

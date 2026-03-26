@@ -10,8 +10,8 @@ public class SpriteEntry {
 	public SpriteEntry(Sprite sprite, Vector2 ownerPosition) {
 		this.sprite = sprite;
 		this.worldPosition = new Vector2(
-				ownerPosition.getX() + sprite.getOffset().getX(),
-				ownerPosition.getY() + sprite.getOffset().getY());
+				ownerPosition.x() + sprite.getOffset().x(),
+				ownerPosition.y() + sprite.getOffset().y());
 	}
 
 	public Sprite getSprite() {
@@ -23,6 +23,6 @@ public class SpriteEntry {
 	}
 
 	public double getRenderingZOffset() {
-		return sprite.getRenderingLayer() - worldPosition.getY();
+		return sprite.getRenderingLayer() - worldPosition.y();
 	}
 }

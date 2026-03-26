@@ -70,16 +70,16 @@ public abstract class Entity extends GameObject
 	}
 
 	private boolean overlapsAABB(GameObject other) {
-		double aHalfW = this.getSize().getX() / 2.0;
-		double aHalfH = this.getSize().getY() / 2.0;
-		double bHalfW = other.getSize().getX() / 2.0;
-		double bHalfH = other.getSize().getY() / 2.0;
+		double aHalfW = this.getSize().x() / 2.0;
+		double aHalfH = this.getSize().y() / 2.0;
+		double bHalfW = other.getSize().x() / 2.0;
+		double bHalfH = other.getSize().y() / 2.0;
 
 		Vector2 aPos = this.getPosition();
 		Vector2 bPos = other.getPosition();
 
-		return Math.abs(aPos.getX() - bPos.getX()) < (aHalfW + bHalfW)
-				&& Math.abs(aPos.getY() - bPos.getY()) < (aHalfH + bHalfH);
+		return Math.abs(aPos.x() - bPos.x()) < (aHalfW + bHalfW)
+				&& Math.abs(aPos.y() - bPos.y()) < (aHalfH + bHalfH);
 	}
 
 	@Override

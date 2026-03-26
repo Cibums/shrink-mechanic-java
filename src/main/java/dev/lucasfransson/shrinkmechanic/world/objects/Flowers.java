@@ -31,8 +31,8 @@ public class Flowers extends WorldObject implements IRandomizable {
 	public void randomize(Random rnd) {
 		getMainSprite().selectVariant(rnd);
 		getMainSprite().setFlipX(rnd.nextBoolean());
-		applyTintRandomization(rnd, COLORS);
-		applyColorOffsetRandomization(rnd, 0.06);
+		getMainSprite().randomizeTint(rnd, COLORS);
+		getMainSprite().randomizeColorOffset(rnd, 0.06);
 		applyPositionRandomization(rnd, 0.2);
 	}
 }

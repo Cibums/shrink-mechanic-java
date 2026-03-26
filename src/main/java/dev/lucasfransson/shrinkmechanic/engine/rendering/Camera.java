@@ -20,10 +20,10 @@ public class Camera implements ITickable, IPositioned {
 		Vector2 current = position;
 		Vector2 targetPos = target.getPosition();
 
-		double newX = current.getX()
-				+ (targetPos.getX() - current.getX()) * lerpSpeed * deltaTime;
-		double newY = current.getY()
-				+ (targetPos.getY() - current.getY()) * lerpSpeed * deltaTime;
+		double newX = current.x()
+				+ (targetPos.x() - current.x()) * lerpSpeed * deltaTime;
+		double newY = current.y()
+				+ (targetPos.y() - current.y()) * lerpSpeed * deltaTime;
 
 		position = new Vector2(newX, newY);
 	}

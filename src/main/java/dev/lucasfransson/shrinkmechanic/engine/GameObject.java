@@ -40,13 +40,13 @@ public class GameObject implements IPositioned {
 	}
 
 	public void move(double x, double y) {
-		this.position = new Vector2(this.position.getX() + x,
-				this.position.getY() + y);
+		this.position = new Vector2(this.position.x() + x,
+				this.position.y() + y);
 	}
 
 	public void move(Vector2 vector) {
-		this.position = new Vector2(this.position.getX() + vector.getX(),
-				this.position.getY() + vector.getY());
+		this.position = new Vector2(this.position.x() + vector.x(),
+				this.position.y() + vector.y());
 	}
 
 	public boolean hasCollision() {

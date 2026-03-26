@@ -11,7 +11,6 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
-import javafx.scene.paint.Color;
 
 public abstract class WorldObject extends GameObject
 		implements
@@ -44,8 +43,8 @@ public abstract class WorldObject extends GameObject
 
 	@Override
 	public void setPosition(Vector2Int position) {
-		super.setPosition(new Vector2(position.getX() + positionOffset.getX(),
-				position.getY() + positionOffset.getY()));
+		super.setPosition(new Vector2(position.x() + positionOffset.x(),
+				position.y() + positionOffset.y()));
 	}
 
 	protected void applyPositionRandomization(Random rnd, double posRange) {
@@ -57,25 +56,6 @@ public abstract class WorldObject extends GameObject
 			double scaleMax) {
 		double scale = scaleMin + rnd.nextDouble() * (scaleMax - scaleMin);
 		getMainSprite().setScale(scale);
-		setSize(new Vector2(getSize().getX() * scale,
-				getSize().getY() * scale));
-	}
-
-	protected void applyColorOffsetRandomization(Random rnd,
-			double colorRange) {
-		Sprite s = getMainSprite();
-		Color base = s.getTint() != null ? s.getTint() : Color.WHITE;
-		double r = Math.clamp(
-				base.getRed() + (rnd.nextDouble() * 2 - 1) * colorRange, 0, 1);
-		double g = Math.clamp(
-				base.getGreen() + (rnd.nextDouble() * 2 - 1) * colorRange, 0,
-				1);
-		double b = Math.clamp(
-				base.getBlue() + (rnd.nextDouble() * 2 - 1) * colorRange, 0, 1);
-		s.setTint(new Color(r, g, b, 1.0));
-	}
-
-	protected void applyTintRandomization(Random rnd, Color... colors) {
-		getMainSprite().setTint(colors[rnd.nextInt(colors.length)]);
+		setSize(new Vector2(getSize().x() * scale, getSize().y() * scale));
 	}
 }

@@ -42,8 +42,8 @@ public class GameWorld {
 	}
 
 	public void updateChunks(Vector2 playerPos) {
-		ChunkCoord current = ChunkCoord.fromWorldPos(playerPos.getX(),
-				playerPos.getY());
+		ChunkCoord current = ChunkCoord.fromWorldPos(playerPos.x(),
+				playerPos.y());
 
 		if (current.equals(lastPlayerChunk)) {
 			return;
@@ -87,8 +87,8 @@ public class GameWorld {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
-			chunk.destroyObject(localCoord(position.getX()),
-					localCoord(position.getY()), registry);
+			chunk.destroyObject(localCoord(position.x()),
+					localCoord(position.y()), registry);
 		}
 
 		if (eventListener != null)
@@ -99,8 +99,8 @@ public class GameWorld {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
-			chunk.destroyTile(localCoord(position.getX()),
-					localCoord(position.getY()), registry);
+			chunk.destroyTile(localCoord(position.x()),
+					localCoord(position.y()), registry);
 		}
 
 		if (eventListener != null)
@@ -113,8 +113,8 @@ public class GameWorld {
 		Chunk chunk = chunks.get(coord);
 
 		if (chunk != null) {
-			chunk.placeWorldObject(localCoord(position.getX()),
-					localCoord(position.getY()), object,
+			chunk.placeWorldObject(localCoord(position.x()),
+					localCoord(position.y()), object,
 					activeChunks.contains(coord) ? registry : null, mode);
 		}
 
@@ -127,9 +127,8 @@ public class GameWorld {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
-			chunk.placeTile(localCoord(position.getX()),
-					localCoord(position.getY()), tile,
-					activeChunks.contains(coord) ? registry : null, mode);
+			chunk.placeTile(localCoord(position.x()), localCoord(position.y()),
+					tile, activeChunks.contains(coord) ? registry : null, mode);
 		}
 
 		if (eventListener != null)
@@ -137,8 +136,8 @@ public class GameWorld {
 	}
 
 	private ChunkCoord toChunkCoord(Vector2Int pos) {
-		return new ChunkCoord(Math.floorDiv(pos.getX(), GameConfig.CHUNK_SIZE),
-				Math.floorDiv(pos.getY(), GameConfig.CHUNK_SIZE));
+		return new ChunkCoord(Math.floorDiv(pos.x(), GameConfig.CHUNK_SIZE),
+				Math.floorDiv(pos.y(), GameConfig.CHUNK_SIZE));
 	}
 
 	private int localCoord(int worldCoord) {

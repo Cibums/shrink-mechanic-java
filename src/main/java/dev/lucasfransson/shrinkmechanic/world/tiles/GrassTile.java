@@ -1,8 +1,11 @@
 package dev.lucasfransson.shrinkmechanic.world.tiles;
 
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
+import java.util.Random;
 
-public class GrassTile extends Tile {
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
+import dev.lucasfransson.shrinkmechanic.world.objects.IRandomizable;
+
+public class GrassTile extends Tile implements IRandomizable {
 
 	public GrassTile() {
 		super(new Sprite(Sprite.getTextureFromPath("/grass.png")));
@@ -10,5 +13,10 @@ public class GrassTile extends Tile {
 
 	@Override
 	public void onDestroy() {
+	}
+
+	@Override
+	public void randomize(Random rnd) {
+		getMainSprite().randomizeColorOffset(rnd, 0.05);
 	}
 }
