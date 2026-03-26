@@ -30,6 +30,9 @@ public class Sprite {
 
 	private Animation currentAnimation = null;
 	private boolean isPaused = true;
+	private boolean synced = true;
+	private double animationStartTime = 0.0;
+	private boolean looping = true;
 
 	private Color tint;
 
@@ -163,15 +166,32 @@ public class Sprite {
 		return currentAnimation;
 	}
 
-	public void setAnimation(Animation animation) {
-		this.currentAnimation = animation;
-	}
-
 	public boolean isPaused() {
 		return isPaused;
 	}
 
+	public boolean isLooping() {
+		return looping;
+	}
+
+	public void setLooping(boolean looping) {
+		this.looping = looping;
+	}
+
+	public boolean isSynced() {
+		return synced;
+	}
+
+	public void setSynced(boolean synced) {
+		this.synced = synced;
+	}
+
 	public void playAnimation() {
+		this.isPaused = false;
+	}
+
+	public void playAnimation(double currentTime) {
+		this.animationStartTime = currentTime;
 		this.isPaused = false;
 	}
 
@@ -179,12 +199,35 @@ public class Sprite {
 		this.isPaused = true;
 	}
 
-	public void updateAnimationFrame(double elapsedTime, double deltaTime) {
+	public void setAnimation(Animation animation) {
+		this.currentAnimation = animation;
+		this.isPaused = false;
+	}
+
+	public void setAnimation(Animation animation, double currentTime) {
+		this.currentAnimation = animation;
+		this.animationStartTime = currentTime;
+		this.synced = false;
+		this.isPaused = false;
+	}
+
+	public void updateAnimationFrame(double elapsedTime) {
+		double elapsed = synced
+				? elapsedTime
+				: elapsedTime - animationStartTime;
+		double playTime = currentAnimation.getPlayTime();
 		List<Image> frames = currentAnimation.getFrames();
 		int frameCount = frames.size();
-		int frameIndex = (int) Math
-				.floor((elapsedTime % currentAnimation.getPlayTime())
-						/ currentAnimation.getPlayTime() * frameCount);
+
+		if (!looping && elapsed >= playTime) {
+			applyTexture(frames.getLast());
+			isPaused = true;
+			return;
+		}
+
+		double progress = (elapsed % playTime) / playTime;
+		int frameIndex = Math.clamp((int) Math.floor(progress * frameCount), 0,
+				frameCount - 1);
 		applyTexture(frames.get(frameIndex));
 	}
 
