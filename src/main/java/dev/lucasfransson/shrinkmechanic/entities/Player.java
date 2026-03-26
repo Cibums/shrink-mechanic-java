@@ -2,7 +2,7 @@ package dev.lucasfransson.shrinkmechanic.entities;
 
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 import javafx.scene.input.KeyCode;
 
@@ -12,17 +12,17 @@ public class Player extends Entity {
 	private double walkSpeed = 3;
 
 	public Player(InputManager input) {
-		super(Renderable.getTextureFromPath("/player.png"));
+		super(new Sprite(Sprite.getTextureFromPath("/player.png")));
 		this.input = input;
 		this.setSize(new Vector2(0.2, 0.2));
-		this.setRenderingLayer(1);
 		this.setHasCollision(true);
-		this.setSpriteAlignment(SpriteAlignment.TOP);
+		getMainSprite().setSpriteAlignment(SpriteAlignment.TOP);
 	}
 
 	@Override
 	public void update(double deltaTime) {
-		double dx = 0, dy = 0;
+		double dx = 0;
+		double dy = 0;
 
 		if (input.isKeyHeld(KeyCode.W))
 			dy += walkSpeed;

@@ -59,27 +59,26 @@ public class GameCanvas extends Canvas {
 	private void render() {
 		double rangeX = canvasWidth / (GameConfig.GRID_CELL_SIZE * zoom);
 		double rangeY = canvasHeight / (GameConfig.GRID_CELL_SIZE * zoom);
-		render(renderSystem.getRenderablesInRange(camera.getPosition(), rangeX,
-				rangeY));
+		render(renderSystem.getSpriteEntriesInRange(camera.getPosition(),
+				rangeX, rangeY));
 	}
 
-	public void render(List<Renderable> renderables) {
+	public void render(List<SpriteEntry> entries) {
 		double scroll = input.consumeScrollDelta();
-
 		if (scroll != 0 && input.isKeyHeld(KeyCode.ALT)) {
 			zoom += scroll * 0.001;
 			zoom = Math.clamp(zoom, 0.25, 5.0);
 		}
 
 		clearCanvas();
-
 		Vector2 playerPosition = camera.getPosition();
-
 		gc.setImageSmoothing(false);
 
-		for (Renderable r : renderables) {
+		for (SpriteEntry entry : entries) {
+			Sprite s = entry.getSprite();
+			Vector2 pos = entry.getWorldPosition();
 
-			Vector2 offset = r.getPosition().subtract(playerPosition);
+			Vector2 offset = pos.subtract(playerPosition);
 			int grid = GameConfig.GRID_CELL_SIZE;
 
 			double cellX = (offset.getX() * grid * zoom) + (canvasWidth / 2.0)
@@ -87,16 +86,16 @@ public class GameCanvas extends Canvas {
 			double cellY = (-offset.getY() * grid * zoom) + (canvasHeight / 2.0)
 					- ((grid * zoom) / 2.0);
 
-			double spriteW = r.getSpriteSize().getX() * zoom;
-			double spriteH = r.getSpriteSize().getY() * zoom;
+			double spriteW = s.getSpriteSize().getX() * zoom;
+			double spriteH = s.getSpriteSize().getY() * zoom;
 			double spriteX = cellX + ((grid * zoom) - spriteW) / 2.0;
-			double spriteY = cellY - (r.getSpriteYOffset() * zoom);
+			double spriteY = cellY - (s.getSpriteYOffset() * zoom);
 
-			Image img = r.hasTint()
-					? Renderable.applyTint(r.getTexture(), r.getTint())
-					: r.getTexture();
+			Image img = s.hasTint()
+					? Sprite.applyTint(s.getTexture(), s.getTint())
+					: s.getTexture();
 
-			if (r.getFlipX()) {
+			if (s.getFlipX()) {
 				gc.drawImage(img, spriteX + spriteW, spriteY, -spriteW,
 						spriteH);
 			} else {

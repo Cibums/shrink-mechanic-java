@@ -1,28 +1,47 @@
 package dev.lucasfransson.shrinkmechanic.entities;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
 import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.ICollisionAware;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
-import javafx.scene.image.Image;
 
-public abstract class Entity extends Renderable
+public abstract class Entity extends GameObject
 		implements
+			IRenderable,
 			ITickable,
 			ICollisionAware {
 
+	private final List<Sprite> sprites = new ArrayList<>();
 	private CollisionSystem collisionSystem;
 
-	protected Entity(Image texture) {
-		super(texture);
+	protected Entity(Sprite sprite) {
+		sprites.add(sprite);
+		this.getMainSprite().setRenderingLayer(2);
+	}
+
+	protected Sprite getMainSprite() {
+		return sprites.getFirst();
+	}
+
+	protected void addSprite(Sprite sprite) {
+		sprites.add(sprite);
+	}
+
+	@Override
+	public List<Sprite> getSprites() {
+		return Collections.unmodifiableList(sprites);
 	}
 
 	protected void moveWithCollision(double dx, double dy, double deltaTime) {
-
 		if (dx != 0) {
-			this.setFlipX(dx < 0);
+			getMainSprite().setFlipX(dx < 0);
 		}
 
 		moveHorizontally(dx * deltaTime);
@@ -37,11 +56,9 @@ public abstract class Entity extends Renderable
 	}
 
 	private boolean isCollidingWithAny() {
-
 		if (collisionSystem == null) {
 			return false;
 		}
-
 		for (GameObject other : collisionSystem
 				.getNearbyCollidables(this.getPosition(), 2.0)) {
 			if (other == this)
@@ -65,6 +82,7 @@ public abstract class Entity extends Renderable
 				&& Math.abs(aPos.getY() - bPos.getY()) < (aHalfH + bHalfH);
 	}
 
+	@Override
 	public void setCollisionSystem(CollisionSystem collisionSystem) {
 		this.collisionSystem = collisionSystem;
 	}

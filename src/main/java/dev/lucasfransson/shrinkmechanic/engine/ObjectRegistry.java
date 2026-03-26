@@ -1,6 +1,6 @@
 package dev.lucasfransson.shrinkmechanic.engine;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
 
@@ -17,18 +17,17 @@ public class ObjectRegistry {
 	}
 
 	public <T> T instantiate(T object) {
-		if (object instanceof Renderable r)
+		if (object instanceof IRenderable r)
 			renderSystem.register(r);
 		if (object instanceof ITickable t)
 			tickSystem.register(t);
 		if (object instanceof GameObject g)
 			collisionSystem.register(g);
-
 		return object;
 	}
 
 	public <T> void destroy(T object) {
-		if (object instanceof Renderable r)
+		if (object instanceof IRenderable r)
 			renderSystem.unregister(r);
 		if (object instanceof ITickable t)
 			tickSystem.unregister(t);

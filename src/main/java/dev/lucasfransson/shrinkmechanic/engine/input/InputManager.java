@@ -21,14 +21,9 @@ public class InputManager {
 	public void listen(Scene scene) {
 		scene.setOnKeyPressed(event -> heldKeys.add(event.getCode()));
 		scene.setOnKeyReleased(event -> heldKeys.remove(event.getCode()));
-
-		scene.setOnMouseMoved(event -> {
-			mousePosition = new Vector2(event.getX(), event.getY());
-		});
-
-		scene.setOnScroll(event -> {
-			scrollDelta += event.getDeltaY();
-		});
+		scene.setOnMouseMoved(event -> mousePosition = new Vector2(event.getX(),
+				event.getY()));
+		scene.setOnScroll(event -> scrollDelta += event.getDeltaY());
 
 	}
 

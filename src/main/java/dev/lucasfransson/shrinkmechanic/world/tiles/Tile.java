@@ -1,32 +1,42 @@
 package dev.lucasfransson.shrinkmechanic.world.tiles;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Animation;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
-import javafx.scene.image.Image;
 
-public abstract class Tile extends Renderable implements IDestroyable {
+public abstract class Tile extends GameObject
+		implements
+			IRenderable,
+			IDestroyable {
 
+	private final List<Sprite> sprites = new ArrayList<>();
 	private boolean canBePlacedOn = true;
 
-	protected Tile(Image texture) {
-		super(texture == null
-				? Renderable.getTextureFromPath("/default.png")
-				: texture);
-
-		initTile();
-	}
-
-	protected Tile(Animation animation) {
-		super(animation);
-		initTile();
-	}
-
-	private void initTile() {
+	protected Tile(Sprite sprite) {
+		sprite.setSpriteAlignment(SpriteAlignment.CENTER);
+		sprites.add(sprite);
 		this.setSize(new Vector2(1.0, 1.0));
-		this.setSpriteAlignment(SpriteAlignment.CENTER);
 		this.setHasCollision(false);
+	}
+
+	protected Sprite getMainSprite() {
+		return sprites.getFirst();
+	}
+
+	protected void addSprite(Sprite sprite) {
+		sprites.add(sprite);
+	}
+
+	@Override
+	public List<Sprite> getSprites() {
+		return Collections.unmodifiableList(sprites);
 	}
 
 	public boolean canBePlacedOn() {

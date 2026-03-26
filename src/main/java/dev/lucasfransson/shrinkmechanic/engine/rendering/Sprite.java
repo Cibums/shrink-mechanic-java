@@ -1,10 +1,11 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
-import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
@@ -12,57 +13,80 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 
-public abstract class Renderable extends GameObject {
+public class Sprite {
 
 	private static final Map<String, Image> imageCache = new ConcurrentHashMap<>();
 	private static final Map<String, Image> tintedImageCache = new ConcurrentHashMap<>();
 	private static final Image DEFAULT_IMAGE = new Image("default.png");
 
+	private final List<Image> variants;
 	private Image texture;
-	private double spriteYOffset = 0;
 	private Vector2 spriteSize;
+	private Vector2 offset;
+	private double spriteYOffset = 0;
+	private double scale = 1.0;
 	private boolean flipX = false;
-	private int renderingLayer;
+	private int renderingLayer = 0;
 
 	private Animation currentAnimation = null;
 	private boolean isPaused = true;
 
 	private Color tint;
 
-	protected Renderable(Animation animation) {
-		this(animation.getFrames().getFirst());
-		currentAnimation = animation;
-		this.playAnimation();
+	public Sprite(Image texture) {
+		this.variants = List.of(texture);
+		applyTexture(texture);
+		this.offset = Vector2.zero();
 	}
 
-	protected Renderable(Image texture) {
-		this.setTexture(texture);
+	public Sprite(List<Image> variants) {
+		if (variants == null || variants.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Variants list must not be empty");
+		}
+		this.variants = List.copyOf(variants);
+		applyTexture(this.variants.getFirst());
+		this.offset = Vector2.zero();
 	}
+
+	public Sprite(Animation animation) {
+		this.variants = List.of(animation.getFrames().getFirst());
+		applyTexture(this.variants.getFirst());
+		this.offset = Vector2.zero();
+		this.currentAnimation = animation;
+		this.isPaused = false;
+	}
+
+	private void applyTexture(Image image) {
+		this.texture = image;
+		this.spriteSize = new Vector2(image.getWidth(), image.getHeight());
+	}
+
+	// --- Variants ---
+
+	public void selectVariant(Random rnd) {
+		if (variants.size() > 1) {
+			applyTexture(variants.get(rnd.nextInt(variants.size())));
+		}
+	}
+
+	public boolean hasVariants() {
+		return variants.size() > 1;
+	}
+
+	// --- Texture ---
 
 	public Image getTexture() {
-		if (texture != null) {
-			return texture;
-		}
-
-		return DEFAULT_IMAGE;
+		return texture != null ? texture : DEFAULT_IMAGE;
 	}
 
 	public void setTexture(Image texture) {
-		this.texture = texture;
-		this.spriteSize = new Vector2(texture.getWidth(), texture.getHeight());
-	}
-
-	public void setRenderingLayer(int layer) {
-		this.renderingLayer = layer;
-	}
-
-	public double getRenderingZOffset() {
-		return renderingLayer - this.getPosition().getY();
+		applyTexture(texture);
 	}
 
 	public static Image getTextureFromPath(String path) {
 		return imageCache.computeIfAbsent(path, p -> {
-			var resource = Renderable.class.getResource(p);
+			var resource = Sprite.class.getResource(p);
 			if (resource != null) {
 				return new Image(resource.toExternalForm());
 			}
@@ -70,12 +94,15 @@ public abstract class Renderable extends GameObject {
 		});
 	}
 
+	// --- Size / Offset / Scale ---
+
 	public Vector2 getSpriteSize() {
-		return spriteSize;
+		return new Vector2(spriteSize.getX() * scale,
+				spriteSize.getY() * scale);
 	}
 
 	public double getSpriteYOffset() {
-		return spriteYOffset;
+		return spriteYOffset * scale;
 	}
 
 	public void setSpriteYOffset(double spriteYOffset) {
@@ -84,16 +111,44 @@ public abstract class Renderable extends GameObject {
 
 	public void setSpriteAlignment(SpriteAlignment alignment) {
 		int grid = GameConfig.GRID_CELL_SIZE;
-		double spriteH = this.getTexture().getHeight();
+		double spriteH = this.texture.getHeight();
 
-		double offset = switch (alignment) {
+		double calculatedOffset = switch (alignment) {
 			case TOP -> 0;
 			case CENTER -> (spriteH - grid) / 2.0;
 			case BOTTOM -> spriteH - grid;
 		};
 
-		this.setSpriteYOffset(offset);
+		this.setSpriteYOffset(calculatedOffset);
 	}
+
+	public double getScale() {
+		return scale;
+	}
+
+	public void setScale(double scale) {
+		this.scale = scale;
+	}
+
+	public Vector2 getOffset() {
+		return offset;
+	}
+
+	public void setOffset(Vector2 offset) {
+		this.offset = offset;
+	}
+
+	// --- Rendering Layer ---
+
+	public int getRenderingLayer() {
+		return renderingLayer;
+	}
+
+	public void setRenderingLayer(int layer) {
+		this.renderingLayer = layer;
+	}
+
+	// --- Flip ---
 
 	public boolean getFlipX() {
 		return flipX;
@@ -101,6 +156,20 @@ public abstract class Renderable extends GameObject {
 
 	public void setFlipX(boolean flipX) {
 		this.flipX = flipX;
+	}
+
+	// --- Animation ---
+
+	public Animation getCurrentAnimation() {
+		return currentAnimation;
+	}
+
+	public void setAnimation(Animation animation) {
+		this.currentAnimation = animation;
+	}
+
+	public boolean isPaused() {
+		return isPaused;
 	}
 
 	public void playAnimation() {
@@ -111,35 +180,29 @@ public abstract class Renderable extends GameObject {
 		this.isPaused = true;
 	}
 
-	public void setAnimation(Animation animation) {
-		this.currentAnimation = animation;
-	}
-
-	public Animation getCurrentAnimation() {
-		return currentAnimation;
-	}
-
-	public boolean isPaused() {
-		return isPaused;
-	}
-
 	public void updateAnimationFrame(double elapsedTime, double deltaTime) {
 		List<Image> frames = currentAnimation.getFrames();
 		int frameCount = frames.size();
-		this.setTexture(frames.get(
-				(int) Math.floor((elapsedTime % currentAnimation.getPlayTime())
-						/ currentAnimation.getPlayTime() * frameCount)));
+		int frameIndex = (int) Math
+				.floor((elapsedTime % currentAnimation.getPlayTime())
+						/ currentAnimation.getPlayTime() * frameCount);
+		applyTexture(frames.get(frameIndex));
 	}
+
+	// --- Tint ---
 
 	public void setTint(Color tint) {
 		this.tint = tint;
 	}
+
 	public void clearTint() {
 		this.tint = null;
 	}
+
 	public boolean hasTint() {
 		return tint != null;
 	}
+
 	public Color getTint() {
 		return tint;
 	}
@@ -147,14 +210,11 @@ public abstract class Renderable extends GameObject {
 	public static Image applyTint(Image source, Color tint) {
 		String key = System.identityHashCode(source) + "_" + tint.toString();
 		return tintedImageCache.computeIfAbsent(key, k -> {
-
 			int w = (int) source.getWidth();
 			int h = (int) source.getHeight();
-
 			WritableImage result = new WritableImage(w, h);
 			PixelReader reader = source.getPixelReader();
 			PixelWriter writer = result.getPixelWriter();
-
 			for (int y = 0; y < h; y++) {
 				for (int x = 0; x < w; x++) {
 					Color p = reader.getColor(x, y);
@@ -163,7 +223,6 @@ public abstract class Renderable extends GameObject {
 							p.getBlue() * tint.getBlue(), p.getOpacity()));
 				}
 			}
-
 			return result;
 		});
 	}

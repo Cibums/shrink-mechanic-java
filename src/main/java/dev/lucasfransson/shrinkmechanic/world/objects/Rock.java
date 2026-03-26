@@ -3,14 +3,14 @@ package dev.lucasfransson.shrinkmechanic.world.objects;
 import java.util.Random;
 
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 
 public class Rock extends WorldObject implements IRandomizable {
 
 	public Rock() {
-		super(Renderable.getTextureFromPath("/rock.png"));
-		this.setSpriteAlignment(SpriteAlignment.CENTER);
+		super(new Sprite(Sprite.getTextureFromPath("/rock.png")));
+		getMainSprite().setSpriteAlignment(SpriteAlignment.CENTER);
 		this.setSize(new Vector2(0.375, 0.20));
 	}
 

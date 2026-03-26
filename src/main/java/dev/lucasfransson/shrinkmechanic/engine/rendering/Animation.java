@@ -18,7 +18,7 @@ public class Animation {
 		while (true) {
 			String path = directoryPath + "/" + index + ".png";
 
-			var resource = Renderable.class.getResource(path);
+			var resource = IRenderable.class.getResource(path);
 
 			if (resource == null) {
 				break;

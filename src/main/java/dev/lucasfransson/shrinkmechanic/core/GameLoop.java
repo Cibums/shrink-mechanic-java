@@ -9,7 +9,7 @@ import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Camera;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
-import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteEntry;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import dev.lucasfransson.shrinkmechanic.world.ReplacementMode;
@@ -63,9 +63,9 @@ public class GameLoop extends AnimationTimer {
 				/ (GameConfig.GRID_CELL_SIZE * canvas.getZoom());
 		double rangeY = canvas.getCanvasHeight()
 				/ (GameConfig.GRID_CELL_SIZE * canvas.getZoom());
-		List<Renderable> visible = renderSystem
-				.getRenderablesInRange(camera.getPosition(), rangeX, rangeY);
 
+		List<SpriteEntry> visible = renderSystem
+				.getSpriteEntriesInRange(camera.getPosition(), rangeX, rangeY);
 		renderSystem.updateAnimations(deltaTime, visible);
 		canvas.render(visible);
 	}
