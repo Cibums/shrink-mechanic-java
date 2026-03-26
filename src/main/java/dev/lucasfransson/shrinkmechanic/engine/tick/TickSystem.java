@@ -1,13 +1,14 @@
 package dev.lucasfransson.shrinkmechanic.engine.tick;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import dev.lucasfransson.shrinkmechanic.engine.IGameSystem;
 
 public class TickSystem implements IGameSystem {
 
-	private final List<ITickable> tickables = new ArrayList<>();
+	private final Set<ITickable> tickables = new LinkedHashSet<>();
 
 	public void register(ITickable t) {
 		tickables.add(t);

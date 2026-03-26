@@ -2,14 +2,16 @@ package dev.lucasfransson.shrinkmechanic.engine.rendering;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import dev.lucasfransson.shrinkmechanic.engine.IGameSystem;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 
 public class RenderSystem implements IGameSystem {
 
-	private final List<IRenderable> renderables = new ArrayList<>();
+	private final Set<IRenderable> renderables = new LinkedHashSet<>();
 	private final List<SpriteEntry> spriteEntryBuffer = new ArrayList<>();
 	private double elapsedTime = 0.0;
 
