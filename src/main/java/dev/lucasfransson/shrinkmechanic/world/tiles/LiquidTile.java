@@ -18,7 +18,7 @@ public abstract class LiquidTile extends Tile {
 	}
 
 	private void initLiquidTile() {
-		this.setSpriteYOffset(-8);
+		this.setSpriteYOffset(-2);
 		this.setHasCollision(true);
 	}
 }

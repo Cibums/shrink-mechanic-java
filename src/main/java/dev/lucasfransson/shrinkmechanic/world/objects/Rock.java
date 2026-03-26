@@ -16,7 +16,8 @@ public class Rock extends WorldObject implements IRandomizable {
 
 	@Override
 	public void randomize(Random rnd) {
-		applyRandomization(rnd, 0.2, 0.9, 1.1);
+		applyPositionRandomization(rnd, 0.2);
+		applySizeRandomization(rnd, 0.9, 1.1);
 	}
 
 	@Override

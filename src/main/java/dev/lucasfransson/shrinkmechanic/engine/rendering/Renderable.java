@@ -7,10 +7,15 @@ import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
 
 public abstract class Renderable extends GameObject {
 
 	private static final Map<String, Image> imageCache = new ConcurrentHashMap<>();
+	private static final Map<String, Image> tintedImageCache = new ConcurrentHashMap<>();
 	private static final Image DEFAULT_IMAGE = new Image("default.png");
 
 	private Image texture;
@@ -21,6 +26,8 @@ public abstract class Renderable extends GameObject {
 
 	private Animation currentAnimation = null;
 	private boolean isPaused = true;
+
+	private Color tint;
 
 	protected Renderable(Animation animation) {
 		this(animation.getFrames().getFirst());
@@ -122,5 +129,42 @@ public abstract class Renderable extends GameObject {
 		this.setTexture(frames.get(
 				(int) Math.floor((elapsedTime % currentAnimation.getPlayTime())
 						/ currentAnimation.getPlayTime() * frameCount)));
+	}
+
+	public void setTint(Color tint) {
+		this.tint = tint;
+	}
+	public void clearTint() {
+		this.tint = null;
+	}
+	public boolean hasTint() {
+		return tint != null;
+	}
+	public Color getTint() {
+		return tint;
+	}
+
+	public static Image applyTint(Image source, Color tint) {
+		String key = System.identityHashCode(source) + "_" + tint.toString();
+		return tintedImageCache.computeIfAbsent(key, k -> {
+
+			int w = (int) source.getWidth();
+			int h = (int) source.getHeight();
+
+			WritableImage result = new WritableImage(w, h);
+			PixelReader reader = source.getPixelReader();
+			PixelWriter writer = result.getPixelWriter();
+
+			for (int y = 0; y < h; y++) {
+				for (int x = 0; x < w; x++) {
+					Color p = reader.getColor(x, y);
+					writer.setColor(x, y, new Color(p.getRed() * tint.getRed(),
+							p.getGreen() * tint.getGreen(),
+							p.getBlue() * tint.getBlue(), p.getOpacity()));
+				}
+			}
+
+			return result;
+		});
 	}
 }

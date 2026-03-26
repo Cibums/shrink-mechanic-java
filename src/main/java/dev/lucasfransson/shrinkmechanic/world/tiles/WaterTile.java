@@ -3,7 +3,7 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.Animation;
 
 public class WaterTile extends LiquidTile {
 
-	public static final Animation water = new Animation("/water", 5.0);
+	public static final Animation water = new Animation("/water", 2.0);
 
 	public WaterTile() {
 		super(water);

@@ -7,6 +7,7 @@ import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
@@ -90,12 +91,15 @@ public class GameCanvas extends Canvas {
 			double spriteX = cellX + ((grid * zoom) - spriteW) / 2.0;
 			double spriteY = cellY - (r.getSpriteYOffset() * zoom);
 
+			Image img = r.hasTint()
+					? Renderable.applyTint(r.getTexture(), r.getTint())
+					: r.getTexture();
+
 			if (r.getFlipX()) {
-				gc.drawImage(r.getTexture(), spriteX + spriteW, spriteY,
-						-spriteW, spriteH);
-			} else {
-				gc.drawImage(r.getTexture(), spriteX, spriteY, spriteW,
+				gc.drawImage(img, spriteX + spriteW, spriteY, -spriteW,
 						spriteH);
+			} else {
+				gc.drawImage(img, spriteX, spriteY, spriteW, spriteH);
 			}
 		}
 	}

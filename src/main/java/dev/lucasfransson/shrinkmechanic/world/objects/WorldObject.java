@@ -7,6 +7,7 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Renderable;
 import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public abstract class WorldObject extends Renderable implements IDestroyable {
 
@@ -25,8 +26,7 @@ public abstract class WorldObject extends Renderable implements IDestroyable {
 
 	@Override
 	public void setPosition(Vector2Int position) {
-		super.setPosition(new Vector2(
-				position.getX() + positionOffset.getX(),
+		super.setPosition(new Vector2(position.getX() + positionOffset.getX(),
 				position.getY() + positionOffset.getY()));
 	}
 
@@ -41,14 +41,33 @@ public abstract class WorldObject extends Renderable implements IDestroyable {
 		return super.getSpriteYOffset() * sizeScale;
 	}
 
-	protected void applyRandomization(Random rnd, double posRange,
-			double scaleMin, double scaleMax) {
-		positionOffset = new Vector2(
-				(rnd.nextDouble() * 2 - 1) * posRange,
+	protected void applyPositionRandomization(Random rnd, double posRange) {
+		positionOffset = new Vector2((rnd.nextDouble() * 2 - 1) * posRange,
 				(rnd.nextDouble() * 2 - 1) * posRange);
+	}
+
+	protected void applySizeRandomization(Random rnd, double scaleMin,
+			double scaleMax) {
 		sizeScale = scaleMin + rnd.nextDouble() * (scaleMax - scaleMin);
-		setSize(new Vector2(
-				getSize().getX() * sizeScale,
+		setSize(new Vector2(getSize().getX() * sizeScale,
 				getSize().getY() * sizeScale));
 	}
+
+	protected void applyColorOffsetRandomization(Random rnd,
+			double colorRange) {
+		Color base = getTint() != null ? getTint() : Color.WHITE;
+		double r = Math.clamp(
+				base.getRed() + (rnd.nextDouble() * 2 - 1) * colorRange, 0, 1);
+		double g = Math.clamp(
+				base.getGreen() + (rnd.nextDouble() * 2 - 1) * colorRange, 0,
+				1);
+		double b = Math.clamp(
+				base.getBlue() + (rnd.nextDouble() * 2 - 1) * colorRange, 0, 1);
+		this.setTint(new Color(r, g, b, 1.0));
+	}
+
+	protected void applyTintRandomization(Random rnd, Color... colors) {
+		this.setTint(colors[rnd.nextInt(colors.length)]);
+	}
+
 }

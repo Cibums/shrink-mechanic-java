@@ -23,7 +23,7 @@ public abstract class Tile extends Renderable implements IDestroyable {
 
 	private void initTile() {
 		this.setSize(new Vector2(1.0, 1.0));
-		this.setSpriteAlignment(SpriteAlignment.TOP);
+		this.setSpriteAlignment(SpriteAlignment.CENTER);
 		this.setHasCollision(false);
 	}
 }
