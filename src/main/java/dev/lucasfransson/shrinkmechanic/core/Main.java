@@ -39,8 +39,8 @@ public class Main extends Application {
 
 		GameWorld world = new GameWorld(registry);
 		Player player = registry.instantiate(new Player(input));
-		Camera camera = registry.instantiate(new Camera(player));
-		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera, input);
+		Camera camera = registry.instantiate(new Camera(player, input));
+		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera);
 
 		registry.instantiate(new Cursor(input, canvas));
 

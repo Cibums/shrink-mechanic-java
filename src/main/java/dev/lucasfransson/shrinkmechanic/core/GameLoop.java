@@ -64,9 +64,9 @@ public class GameLoop extends AnimationTimer {
 		world.updateChunks(camera.getPosition());
 
 		double rangeX = canvas.getCanvasWidth()
-				/ (GameConfig.GRID_CELL_SIZE * canvas.getZoom());
+				/ (GameConfig.GRID_CELL_SIZE * camera.getZoom());
 		double rangeY = canvas.getCanvasHeight()
-				/ (GameConfig.GRID_CELL_SIZE * canvas.getZoom());
+				/ (GameConfig.GRID_CELL_SIZE * camera.getZoom());
 
 		List<SpriteEntry> visible = renderSystem
 				.getSpriteEntriesInRange(camera.getPosition(), rangeX, rangeY);

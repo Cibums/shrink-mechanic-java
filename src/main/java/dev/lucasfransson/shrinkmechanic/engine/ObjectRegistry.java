@@ -22,8 +22,4 @@ public class ObjectRegistry {
 			system.tryUnregister(object);
 		}
 	}
-
-	public void addGameSystem(IGameSystem system) {
-		systems.add(system);
-	}
 }

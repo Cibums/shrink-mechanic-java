@@ -4,12 +4,10 @@ import java.util.List;
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
-import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
 public class GameCanvas extends Canvas {
@@ -20,10 +18,8 @@ public class GameCanvas extends Canvas {
 	private GraphicsContext gc;
 	private RenderSystem renderSystem;
 	private Camera camera;
-	private InputManager input;
 
-	public GameCanvas(Stage stage, RenderSystem renderSystem, Camera camera,
-			InputManager input) {
+	public GameCanvas(Stage stage, RenderSystem renderSystem, Camera camera) {
 		super(stage.widthProperty().doubleValue(),
 				stage.heightProperty().doubleValue());
 
@@ -39,7 +35,6 @@ public class GameCanvas extends Canvas {
 		gc = this.getGraphicsContext2D();
 		this.renderSystem = renderSystem;
 		this.camera = camera;
-		this.input = input;
 
 		onStageWindowResize(stage);
 	}
@@ -54,21 +49,18 @@ public class GameCanvas extends Canvas {
 		gc.clearRect(0, 0, canvasWidth, canvasHeight);
 	}
 
-	private double zoom = 1.5;
-
 	private void render() {
-		double rangeX = canvasWidth / (GameConfig.GRID_CELL_SIZE * zoom);
-		double rangeY = canvasHeight / (GameConfig.GRID_CELL_SIZE * zoom);
+		double rangeX = canvasWidth
+				/ (GameConfig.GRID_CELL_SIZE * camera.getZoom());
+		double rangeY = canvasHeight
+				/ (GameConfig.GRID_CELL_SIZE * camera.getZoom());
 		render(renderSystem.getSpriteEntriesInRange(camera.getPosition(),
 				rangeX, rangeY));
 	}
 
 	public void render(List<SpriteEntry> entries) {
-		double scroll = input.consumeScrollDelta();
-		if (scroll != 0 && input.isKeyHeld(KeyCode.ALT)) {
-			zoom += scroll * 0.001;
-			zoom = Math.clamp(zoom, 0.25, 5.0);
-		}
+
+		double zoom = camera.getZoom();
 
 		clearCanvas();
 		Vector2 playerPosition = camera.getPosition();
@@ -104,10 +96,6 @@ public class GameCanvas extends Canvas {
 		}
 	}
 
-	public double getZoom() {
-		return zoom;
-	}
-
 	public double getCanvasWidth() {
 		return canvasWidth;
 	}
@@ -125,7 +113,10 @@ public class GameCanvas extends Canvas {
 	}
 
 	public Vector2Int screenToWorld(Vector2 screenPos) {
+
+		double zoom = camera.getZoom();
 		int grid = GameConfig.GRID_CELL_SIZE;
+
 		double worldX = camera.getPosition().x()
 				+ (screenPos.x() - canvasWidth / 2.0 + (grid * zoom) / 2.0)
 						/ (grid * zoom);
