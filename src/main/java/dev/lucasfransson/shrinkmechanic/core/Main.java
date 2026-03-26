@@ -1,6 +1,7 @@
 package dev.lucasfransson.shrinkmechanic.core;
 
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
+import dev.lucasfransson.shrinkmechanic.engine.Cursor;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Camera;
@@ -41,14 +42,17 @@ public class Main extends Application {
 		Camera camera = registry.instantiate(new Camera(player));
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera, input);
 
+		registry.instantiate(new Cursor(input, canvas));
+
 		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem, camera,
-				world);
+				world, input);
 		loop.start();
 
 		layout.getChildren().add(canvas);
 		Scene scene = new Scene(layout);
 
 		input.listen(scene);
+		input.listenMouseClicks(canvas);
 
 		stage.setScene(scene);
 		stage.show();

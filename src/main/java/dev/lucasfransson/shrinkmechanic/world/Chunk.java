@@ -48,8 +48,8 @@ public class Chunk {
 					double forestNoiseValue = forestNoise.perlin(wx * SCALE,
 							wy * SCALE);
 
-					if (forestNoiseValue > THRESHOLD && rnd.nextDouble() <= 0.7
-							&& (wx != 0 && wy != 0)) {
+					if (forestNoiseValue > THRESHOLD
+							&& rnd.nextDouble() <= 0.7) {
 						objects[lx][ly] = new Tree();
 					} else if (rnd.nextDouble() < 0.1) {
 						objects[lx][ly] = new Rock();
@@ -104,6 +104,11 @@ public class Chunk {
 
 	public void placeWorldObject(int localX, int localY, WorldObject obj,
 			ObjectRegistry registry, ReplacementMode mode) {
+
+		if (!tiles[localX][localY].canBePlacedOn()) {
+			return;
+		}
+
 		WorldObject existing = objects[localX][localY];
 		if (existing != null) {
 			switch (mode) {

@@ -8,6 +8,8 @@ import javafx.scene.image.Image;
 
 public abstract class Tile extends Renderable implements IDestroyable {
 
+	private boolean canBePlacedOn = true;
+
 	protected Tile(Image texture) {
 		super(texture == null
 				? Renderable.getTextureFromPath("/default.png")
@@ -25,5 +27,13 @@ public abstract class Tile extends Renderable implements IDestroyable {
 		this.setSize(new Vector2(1.0, 1.0));
 		this.setSpriteAlignment(SpriteAlignment.CENTER);
 		this.setHasCollision(false);
+	}
+
+	public boolean canBePlacedOn() {
+		return canBePlacedOn;
+	}
+
+	public void setCanBePlacedOn(boolean canBePlacedOn) {
+		this.canBePlacedOn = canBePlacedOn;
 	}
 }

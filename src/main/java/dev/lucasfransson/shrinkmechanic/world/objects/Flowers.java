@@ -16,7 +16,6 @@ public class Flowers extends WorldObject implements IRandomizable {
 		super(Renderable.getTextureFromPath("/flowers.png"));
 		this.setSpriteAlignment(SpriteAlignment.CENTER);
 		this.setSize(new Vector2(0.5, 0.5));
-		this.setTint(Color.RED);
 		this.setHasCollision(false);
 	}
 
@@ -28,7 +27,7 @@ public class Flowers extends WorldObject implements IRandomizable {
 	@Override
 	public void randomize(Random rnd) {
 		applyTintRandomization(rnd, COLORS);
-		applyColorOffsetRandomization(rnd, 0.1);
+		applyColorOffsetRandomization(rnd, 0.125);
 		applyPositionRandomization(rnd, 0.2);
 	}
 

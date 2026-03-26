@@ -3,6 +3,7 @@ import java.util.List;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.canvas.Canvas;
@@ -124,4 +125,15 @@ public class GameCanvas extends Canvas {
 		this.canvasHeight = canvasHeight;
 	}
 
+	public Vector2Int screenToWorld(Vector2 screenPos) {
+		int grid = GameConfig.GRID_CELL_SIZE;
+		double worldX = camera.getPosition().getX()
+				+ (screenPos.getX() - canvasWidth / 2.0 + (grid * zoom) / 2.0)
+						/ (grid * zoom);
+		double worldY = camera.getPosition().getY()
+				- (screenPos.getY() - canvasHeight / 2.0 + (grid * zoom) / 2.0)
+						/ (grid * zoom);
+		return new Vector2Int((int) Math.floor(worldX),
+				(int) Math.ceil(worldY));
+	}
 }

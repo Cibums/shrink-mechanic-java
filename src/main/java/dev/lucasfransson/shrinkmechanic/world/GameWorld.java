@@ -111,6 +111,7 @@ public class GameWorld {
 			ReplacementMode mode) {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
+
 		if (chunk != null) {
 			chunk.placeWorldObject(localCoord(position.getX()),
 					localCoord(position.getY()), object,
@@ -121,7 +122,8 @@ public class GameWorld {
 			eventListener.onWorldObjectPlaced(position, object);
 	}
 
-	public void placeTile(Vector2Int position, Tile tile, ReplacementMode mode) {
+	public void placeTile(Vector2Int position, Tile tile,
+			ReplacementMode mode) {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
