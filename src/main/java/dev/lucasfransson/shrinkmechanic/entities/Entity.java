@@ -113,11 +113,7 @@ public abstract class Entity extends GameObject
 	}
 
 	private boolean isCollidingWithAny() {
-		if (collisionSystem == null) {
-			return false;
-		}
-		for (GameObject other : collisionSystem
-				.getNearbyCollidables(this.getPosition(), 2.0)) {
+		for (GameObject other : getNearbyCollidables(2.0)) {
 			if (other == this)
 				continue;
 			if (!shouldCollideWith(other))
@@ -128,10 +124,14 @@ public abstract class Entity extends GameObject
 		return false;
 	}
 
+	private final List<GameObject> nearbyBuffer = new ArrayList<>();
+
 	protected List<GameObject> getNearbyCollidables(double range) {
 		if (collisionSystem == null)
 			return List.of();
-		return collisionSystem.getNearbyCollidables(getPosition(), range);
+		collisionSystem.getNearbyCollidables(getPosition(), range,
+				nearbyBuffer);
+		return nearbyBuffer;
 	}
 
 	protected boolean overlapsAABB(GameObject other) {

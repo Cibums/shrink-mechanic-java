@@ -35,8 +35,8 @@ public class RenderSystem implements IGameSystem {
 			unregister(r);
 	}
 
-	public List<SpriteEntry> getSpriteEntriesInRange(Vector2 center,
-			double rangeX, double rangeY) {
+	public void getSpriteEntriesInRange(Vector2 center, double rangeX,
+			double rangeY, List<SpriteEntry> out) {
 		spriteEntryBuffer.clear();
 
 		for (IRenderable r : renderables) {
@@ -52,7 +52,9 @@ public class RenderSystem implements IGameSystem {
 
 		spriteEntryBuffer.sort(
 				Comparator.comparingDouble(SpriteEntry::getRenderingZOffset));
-		return spriteEntryBuffer;
+
+		out.clear();
+		out.addAll(spriteEntryBuffer);
 	}
 
 	public void updateAnimations(double deltaTime, List<SpriteEntry> entries) {

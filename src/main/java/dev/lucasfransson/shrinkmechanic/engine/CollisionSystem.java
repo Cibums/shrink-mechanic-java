@@ -72,7 +72,8 @@ public class CollisionSystem implements IGameSystem {
 		}
 	}
 
-	public List<GameObject> getNearbyCollidables(Vector2 center, double range) {
+	public void getNearbyCollidables(Vector2 center, double range,
+			List<GameObject> out) {
 		queryBuffer.clear();
 
 		int minX = (int) Math.floor(center.x() - range);
@@ -89,7 +90,8 @@ public class CollisionSystem implements IGameSystem {
 			}
 		}
 
-		return queryBuffer;
+		out.clear();
+		out.addAll(queryBuffer);
 	}
 
 	private long cellKey(Vector2 pos) {

@@ -1,4 +1,5 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
+import java.util.ArrayList;
 import java.util.List;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
@@ -58,8 +59,12 @@ public class GameCanvas extends Canvas {
 				/ (GameConfig.GRID_CELL_SIZE * camera.getZoom());
 		double rangeY = canvasHeight
 				/ (GameConfig.GRID_CELL_SIZE * camera.getZoom());
-		render(renderSystem.getSpriteEntriesInRange(camera.getPosition(),
-				rangeX, rangeY));
+
+		List<SpriteEntry> spriteEntryBuffer = new ArrayList<>();
+		renderSystem.getSpriteEntriesInRange(camera.getPosition(), rangeX,
+				rangeY, spriteEntryBuffer);
+
+		render(spriteEntryBuffer);
 	}
 
 	public void render(List<SpriteEntry> entries) {

@@ -11,7 +11,7 @@ public class Camera implements ITickable, IPositioned {
 	private IPositioned target;
 	private Vector2 position;
 	private double lerpSpeed = 8.0;
-	private double zoom = 1.5;
+	private double zoom = 3.0;
 
 	private final InputManager input;
 
@@ -26,10 +26,9 @@ public class Camera implements ITickable, IPositioned {
 		Vector2 current = position;
 		Vector2 targetPos = target.getPosition();
 
-		double newX = current.x()
-				+ (targetPos.x() - current.x()) * lerpSpeed * deltaTime;
-		double newY = current.y()
-				+ (targetPos.y() - current.y()) * lerpSpeed * deltaTime;
+		double t = Math.min(1.0, lerpSpeed * deltaTime);
+		double newX = current.x() + (targetPos.x() - current.x()) * t;
+		double newY = current.y() + (targetPos.y() - current.y()) * t;
 
 		position = new Vector2(newX, newY);
 

@@ -16,7 +16,7 @@ public class LocalPlayer extends Entity implements ITickable {
 	public LocalPlayer(InputManager input) {
 		super(new Sprite(Sprite.getTextureFromPath("/player.png")));
 		this.input = input;
-		this.setSize(new Vector2(0.2, 0.05));
+		this.setSize(new Vector2(0.1, 0.05));
 		this.setHasCollision(true);
 		getMainSprite().setSpriteAlignment(SpriteAlignment.TOP);
 	}

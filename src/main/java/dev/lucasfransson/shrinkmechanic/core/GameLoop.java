@@ -1,5 +1,6 @@
 package dev.lucasfransson.shrinkmechanic.core;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
@@ -36,6 +37,7 @@ public class GameLoop extends AnimationTimer {
 	}
 
 	private long lastUpdate = System.nanoTime();
+	private final List<SpriteEntry> visibleSprites = new ArrayList<>();
 
 	@Override
 	public void handle(long now) {
@@ -53,10 +55,10 @@ public class GameLoop extends AnimationTimer {
 		double rangeY = canvas.getCanvasHeight()
 				/ (GameConfig.GRID_CELL_SIZE * primaryCamera.getZoom());
 
-		List<SpriteEntry> visible = renderSystem.getSpriteEntriesInRange(
-				primaryCamera.getPosition(), rangeX, rangeY);
+		renderSystem.getSpriteEntriesInRange(primaryCamera.getPosition(),
+				rangeX, rangeY, visibleSprites);
 
-		renderSystem.updateAnimations(deltaTime, visible);
-		canvas.render(visible);
+		renderSystem.updateAnimations(deltaTime, visibleSprites);
+		canvas.render(visibleSprites);
 	}
 }
