@@ -277,7 +277,7 @@ public class Sprite {
 	}
 
 	public static Image applyTint(Image source, Color tint) {
-		String key = System.identityHashCode(source) + "_" + tint.toString();
+		String key = source.getUrl() + "_" + tint.toString();
 		return tintedImageCache.computeIfAbsent(key, k -> {
 			int w = (int) source.getWidth();
 			int h = (int) source.getHeight();

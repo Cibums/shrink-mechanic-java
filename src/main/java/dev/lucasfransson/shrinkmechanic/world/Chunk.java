@@ -1,8 +1,7 @@
 package dev.lucasfransson.shrinkmechanic.world;
 
-import java.util.Random;
-
 import java.util.List;
+import java.util.Random;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
@@ -109,7 +108,6 @@ public class Chunk {
 		}
 	}
 
-
 	public void placeWorldObject(int localX, int localY, WorldObject obj,
 			ObjectRegistry registry, ReplacementMode mode) {
 
@@ -176,21 +174,18 @@ public class Chunk {
 		return objects[localX][localY];
 	}
 
-	public List<ItemDrop> destroyObject(int localX, int localY,
-			ObjectRegistry registry) {
+	public List<ItemDrop> destroyObject(int localX, int localY) {
 		if (objects[localX][localY] == null)
 			return List.of();
 		List<ItemDrop> drops = objects[localX][localY].getDrops();
-		objects[localX][localY].onDestroy();
-		registry.destroy(objects[localX][localY]);
+		objects[localX][localY].destroy();
 		objects[localX][localY] = null;
 		return drops;
 	}
 
-	public void destroyTile(int localX, int localY, ObjectRegistry registry) {
+	public void destroyTile(int localX, int localY) {
 		if (tiles[localX][localY] != null) {
-			tiles[localX][localY].onDestroy();
-			registry.destroy(tiles[localX][localY]);
+			tiles[localX][localY].destroy();
 			tiles[localX][localY] = null;
 		}
 	}

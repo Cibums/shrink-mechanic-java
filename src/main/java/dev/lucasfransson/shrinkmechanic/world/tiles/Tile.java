@@ -4,17 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import dev.lucasfransson.shrinkmechanic.engine.GameObject;
+import dev.lucasfransson.shrinkmechanic.engine.DestroyableGameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
-import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
 
-public abstract class Tile extends GameObject
+public abstract class Tile extends DestroyableGameObject
 		implements
-			IRenderable,
-			IDestroyable {
+			IRenderable {
 
 	private final List<Sprite> sprites = new ArrayList<>();
 	private boolean canBePlacedOn = true;

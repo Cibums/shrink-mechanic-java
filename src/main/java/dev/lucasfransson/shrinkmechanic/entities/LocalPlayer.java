@@ -46,4 +46,9 @@ public class LocalPlayer extends Entity implements ITickable {
 	public void setWalkSpeed(double walkSpeed) {
 		this.walkSpeed = walkSpeed;
 	}
+
+	@Override
+	public void onDestroy() {
+
+	}
 }

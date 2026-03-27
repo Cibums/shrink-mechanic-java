@@ -5,17 +5,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import dev.lucasfransson.shrinkmechanic.engine.GameObject;
+import dev.lucasfransson.shrinkmechanic.engine.DestroyableGameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
-import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
 
-public abstract class WorldObject extends GameObject
+public abstract class WorldObject extends DestroyableGameObject
 		implements
-			IRenderable,
-			IDestroyable {
+			IRenderable {
 
 	private final List<Sprite> sprites = new ArrayList<>();
 

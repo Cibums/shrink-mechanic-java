@@ -5,25 +5,23 @@ import java.util.Collections;
 import java.util.List;
 
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
+import dev.lucasfransson.shrinkmechanic.engine.DestroyableGameObject;
 import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.ICollidable;
 import dev.lucasfransson.shrinkmechanic.engine.ICollisionAware;
-import dev.lucasfransson.shrinkmechanic.engine.IManaged;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 
-public abstract class Entity extends GameObject
+public abstract class Entity extends DestroyableGameObject
 		implements
 			IRenderable,
-			ICollisionAware,
-			IManaged {
+			ICollisionAware {
 
 	private static final double SEPARATION_FORCE = 0.001;
 
 	private final List<Sprite> sprites = new ArrayList<>();
 	private CollisionSystem collisionSystem;
-	private Runnable destroyCallback;
 	private Vector2 velocity = Vector2.zero();
 	private double drag = 0.0;
 	private boolean flipSpriteOnMove = true;
@@ -145,15 +143,6 @@ public abstract class Entity extends GameObject
 
 		return Math.abs(aPos.x() - bPos.x()) < (aHalfW + bHalfW)
 				&& Math.abs(aPos.y() - bPos.y()) < (aHalfH + bHalfH);
-	}
-
-	public void setDestroyCallback(Runnable destroyCallback) {
-		this.destroyCallback = destroyCallback;
-	}
-
-	protected void destroy() {
-		if (destroyCallback != null)
-			destroyCallback.run();
 	}
 
 	@Override

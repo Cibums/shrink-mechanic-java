@@ -12,8 +12,6 @@ import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
-import java.util.Random;
-
 import dev.lucasfransson.shrinkmechanic.entities.DroppedItem;
 import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
@@ -45,7 +43,8 @@ public class GameWorld {
 	}
 
 	public ChunkCoord updateChunks(Vector2 position, ChunkCoord lastChunk) {
-		ChunkCoord current = ChunkCoord.fromWorldPos(position.x(), position.y());
+		ChunkCoord current = ChunkCoord.fromWorldPos(position.x(),
+				position.y());
 
 		if (current.equals(lastChunk)) {
 			return lastChunk;
@@ -93,9 +92,10 @@ public class GameWorld {
 			int lx = localCoord(position.x());
 			int ly = localCoord(position.y());
 			WorldObject obj = chunk.getObject(lx, ly);
-			Vector2 spawnPos = obj != null ? obj.getPosition()
+			Vector2 spawnPos = obj != null
+					? obj.getPosition()
 					: new Vector2(position.x() + 0.5, position.y() + 0.5);
-			List<ItemDrop> drops = chunk.destroyObject(lx, ly, registry);
+			List<ItemDrop> drops = chunk.destroyObject(lx, ly);
 			Random rnd = new Random();
 			for (ItemDrop drop : drops) {
 				int amount = drop.resolveAmount(rnd);
@@ -115,7 +115,7 @@ public class GameWorld {
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
 			chunk.destroyTile(localCoord(position.x()),
-					localCoord(position.y()), registry);
+					localCoord(position.y()));
 		}
 
 		notifyListeners(l -> l.onTileDestroyed(position));

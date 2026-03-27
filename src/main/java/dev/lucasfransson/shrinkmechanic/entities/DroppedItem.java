@@ -43,4 +43,10 @@ public class DroppedItem extends Entity implements ITickable, ICollidable {
 	public void update(double deltaTime) {
 		applyPhysics(deltaTime);
 	}
+
+	@Override
+	public void onDestroy() {
+		// TODO Auto-generated method stub
+
+	}
 }
