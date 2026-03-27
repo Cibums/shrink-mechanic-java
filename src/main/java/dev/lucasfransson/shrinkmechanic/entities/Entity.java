@@ -12,6 +12,7 @@ import dev.lucasfransson.shrinkmechanic.engine.ICollisionAware;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.particles.SmokeParticles;
 
 public abstract class Entity extends DestroyableGameObject
 		implements
@@ -180,5 +181,10 @@ public abstract class Entity extends DestroyableGameObject
 
 	public void setFlipSpriteOnMove(boolean state) {
 		this.flipSpriteOnMove = state;
+	}
+
+	@Override
+	public void onDestroy() {
+		spawn(new SmokeParticles(this.getPosition()));
 	}
 }

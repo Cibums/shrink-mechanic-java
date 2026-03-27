@@ -42,7 +42,7 @@ public class Sprite {
 	private Animation currentAnimation = null;
 	private boolean isPaused = true;
 	private boolean synced = true;
-	private double animationStartTime = 0.0;
+	private double localElapsed = 0.0;
 	private boolean looping = true;
 
 	private Color tint;
@@ -68,7 +68,7 @@ public class Sprite {
 		applyTexture(this.variants.getFirst());
 		this.offset = Vector2.zero();
 		this.currentAnimation = animation;
-		this.isPaused = false;
+		this.playAnimation();
 	}
 
 	private void applyTexture(Image image) {
@@ -198,11 +198,7 @@ public class Sprite {
 	}
 
 	public void playAnimation() {
-		this.isPaused = false;
-	}
-
-	public void playAnimation(double currentTime) {
-		this.animationStartTime = currentTime;
+		this.localElapsed = 0.0;
 		this.isPaused = false;
 	}
 
@@ -212,20 +208,18 @@ public class Sprite {
 
 	public void setAnimation(Animation animation) {
 		this.currentAnimation = animation;
+		this.localElapsed = 0.0;
 		this.isPaused = false;
 	}
 
-	public void setAnimation(Animation animation, double currentTime) {
-		this.currentAnimation = animation;
-		this.animationStartTime = currentTime;
-		this.synced = false;
-		this.isPaused = false;
-	}
-
-	public void updateAnimationFrame(double elapsedTime) {
-		double elapsed = synced
-				? elapsedTime
-				: elapsedTime - animationStartTime;
+	public void updateAnimationFrame(double elapsedTime, double deltaTime) {
+		double elapsed;
+		if (synced) {
+			elapsed = elapsedTime;
+		} else {
+			localElapsed += deltaTime;
+			elapsed = localElapsed;
+		}
 		double playTime = currentAnimation.getPlayTime();
 		List<Image> frames = currentAnimation.getFrames();
 		int frameCount = frames.size();

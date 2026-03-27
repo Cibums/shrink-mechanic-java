@@ -4,6 +4,7 @@ import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
 
 public abstract class DestroyableGameObject extends GameObject
 		implements
+			IManaged,
 			IDestroyable {
 
 	private Runnable destroyCallback;
@@ -16,7 +17,9 @@ public abstract class DestroyableGameObject extends GameObject
 
 	public void destroy() {
 		destroyed = true;
+
 		onDestroy();
+
 		if (destroyCallback != null)
 			destroyCallback.run();
 	}

@@ -10,6 +10,7 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.particles.SmokeParticles;
 import dev.lucasfransson.shrinkmechanic.entities.DroppedItem;
 import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 
@@ -52,6 +53,8 @@ public abstract class WorldObject extends DestroyableGameObject
 
 	@Override
 	public void onDestroy() {
+		spawn(new SmokeParticles(this.getPosition()));
+
 		Vector2 pos = getPosition();
 		Random rnd = new Random();
 		for (ItemDrop drop : getDrops()) {

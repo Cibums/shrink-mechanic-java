@@ -20,6 +20,8 @@ public abstract class Player extends Entity {
 
 	@Override
 	public void onDestroy() {
+		super.onDestroy();
+
 		Vector2 pos = getPosition();
 		for (Item item : inventory.getItems()) {
 			DroppedItem di = new DroppedItem(item);

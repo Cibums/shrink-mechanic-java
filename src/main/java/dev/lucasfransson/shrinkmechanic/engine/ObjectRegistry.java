@@ -2,8 +2,6 @@ package dev.lucasfransson.shrinkmechanic.engine;
 
 import java.util.List;
 
-import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
-
 public class ObjectRegistry {
 
 	private final List<IGameSystem> systems;
@@ -20,7 +18,7 @@ public class ObjectRegistry {
 		if (object instanceof GameObject g)
 			g.setSpawner(this::instantiate);
 
-		if (object instanceof IDestroyable m)
+		if (object instanceof IManaged m)
 			m.setDestroyCallback(() -> destroy(object));
 
 		return object;

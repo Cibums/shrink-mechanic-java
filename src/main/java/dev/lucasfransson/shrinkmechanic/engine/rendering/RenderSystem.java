@@ -62,7 +62,7 @@ public class RenderSystem implements IGameSystem {
 		for (SpriteEntry entry : entries) {
 			Sprite s = entry.getSprite();
 			if (!s.isPaused() && s.getCurrentAnimation() != null) {
-				s.updateAnimationFrame(elapsedTime);
+				s.updateAnimationFrame(elapsedTime, deltaTime);
 			}
 		}
 	}
