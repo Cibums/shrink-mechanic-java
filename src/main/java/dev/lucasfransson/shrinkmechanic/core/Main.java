@@ -5,10 +5,12 @@ import dev.lucasfransson.shrinkmechanic.engine.Cursor;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Camera;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.CameraSystem;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
-import dev.lucasfransson.shrinkmechanic.entities.Player;
+import dev.lucasfransson.shrinkmechanic.entities.EntitySystem;
+import dev.lucasfransson.shrinkmechanic.entities.LocalPlayer;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -34,12 +36,16 @@ public class Main extends Application {
 		TickSystem tickSystem = new TickSystem();
 		RenderSystem renderSystem = new RenderSystem();
 		CollisionSystem collisionSystem = new CollisionSystem();
+		EntitySystem entitySystem = new EntitySystem();
+		CameraSystem cameraSystem = new CameraSystem();
 		ObjectRegistry registry = new ObjectRegistry(tickSystem, renderSystem,
-				collisionSystem);
+				collisionSystem, entitySystem, cameraSystem);
 
 		GameWorld world = new GameWorld(registry);
-		Player player = registry.instantiate(new Player(input));
+
+		LocalPlayer player = registry.instantiate(new LocalPlayer(input));
 		Camera camera = registry.instantiate(new Camera(player, input));
+
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera);
 
 		registry.instantiate(new Cursor(input, canvas));

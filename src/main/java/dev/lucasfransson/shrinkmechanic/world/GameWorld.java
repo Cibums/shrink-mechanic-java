@@ -12,6 +12,10 @@ import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
+import java.util.Random;
+
+import dev.lucasfransson.shrinkmechanic.entities.DroppedItem;
+import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
@@ -24,7 +28,6 @@ public class GameWorld {
 	private final PerlinNoise groundNoise;
 	private final PerlinNoise forestNoise;
 	private final long worldSeed;
-	private ChunkCoord lastPlayerChunk = null;
 	private final List<WorldEventListener> eventListeners = new ArrayList<>();
 
 	public GameWorld(ObjectRegistry registry) {
@@ -41,14 +44,12 @@ public class GameWorld {
 		this.forestNoise = new PerlinNoise(worldSeed + 1);
 	}
 
-	public void updateChunks(Vector2 playerPos) {
-		ChunkCoord current = ChunkCoord.fromWorldPos(playerPos.x(),
-				playerPos.y());
+	public ChunkCoord updateChunks(Vector2 position, ChunkCoord lastChunk) {
+		ChunkCoord current = ChunkCoord.fromWorldPos(position.x(), position.y());
 
-		if (current.equals(lastPlayerChunk)) {
-			return;
+		if (current.equals(lastChunk)) {
+			return lastChunk;
 		}
-		lastPlayerChunk = current;
 
 		int radius = GameConfig.CHUNK_LOAD_RADIUS;
 
@@ -81,14 +82,29 @@ public class GameWorld {
 				activeChunks.add(coord);
 			}
 		}
+
+		return current;
 	}
 
 	public void destroyWorldObject(Vector2Int position) {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
-			chunk.destroyObject(localCoord(position.x()),
-					localCoord(position.y()), registry);
+			int lx = localCoord(position.x());
+			int ly = localCoord(position.y());
+			WorldObject obj = chunk.getObject(lx, ly);
+			Vector2 spawnPos = obj != null ? obj.getPosition()
+					: new Vector2(position.x() + 0.5, position.y() + 0.5);
+			List<ItemDrop> drops = chunk.destroyObject(lx, ly, registry);
+			Random rnd = new Random();
+			for (ItemDrop drop : drops) {
+				int amount = drop.resolveAmount(rnd);
+				for (int i = 0; i < amount; i++) {
+					DroppedItem droppedItem = new DroppedItem(drop.getItem());
+					droppedItem.setPosition(spawnPos);
+					registry.instantiate(droppedItem);
+				}
+			}
 		}
 
 		notifyListeners(l -> l.onWorldObjectDestroyed(position));

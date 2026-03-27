@@ -14,6 +14,10 @@ public class ObjectRegistry {
 		for (IGameSystem system : systems) {
 			system.tryRegister(object);
 		}
+
+		if (object instanceof IManaged m)
+			m.setDestroyCallback(() -> destroy(object));
+
 		return object;
 	}
 

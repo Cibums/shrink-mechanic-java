@@ -2,9 +2,12 @@ package dev.lucasfransson.shrinkmechanic.world;
 
 import java.util.Random;
 
+import java.util.List;
+
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
+import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
 import dev.lucasfransson.shrinkmechanic.world.objects.Flowers;
 import dev.lucasfransson.shrinkmechanic.world.objects.IRandomizable;
@@ -106,6 +109,7 @@ public class Chunk {
 		}
 	}
 
+
 	public void placeWorldObject(int localX, int localY, WorldObject obj,
 			ObjectRegistry registry, ReplacementMode mode) {
 
@@ -168,12 +172,19 @@ public class Chunk {
 		}
 	}
 
-	public void destroyObject(int localX, int localY, ObjectRegistry registry) {
-		if (objects[localX][localY] != null) {
-			objects[localX][localY].onDestroy();
-			registry.destroy(objects[localX][localY]);
-			objects[localX][localY] = null;
-		}
+	public WorldObject getObject(int localX, int localY) {
+		return objects[localX][localY];
+	}
+
+	public List<ItemDrop> destroyObject(int localX, int localY,
+			ObjectRegistry registry) {
+		if (objects[localX][localY] == null)
+			return List.of();
+		List<ItemDrop> drops = objects[localX][localY].getDrops();
+		objects[localX][localY].onDestroy();
+		registry.destroy(objects[localX][localY]);
+		objects[localX][localY] = null;
+		return drops;
 	}
 
 	public void destroyTile(int localX, int localY, ObjectRegistry registry) {

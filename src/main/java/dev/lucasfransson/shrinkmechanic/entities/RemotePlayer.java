@@ -16,7 +16,7 @@ public class RemotePlayer extends GameObject implements IRenderable {
 		Sprite sprite = new Sprite(Sprite.getTextureFromPath("/player.png"));
 		sprite.setSpriteAlignment(SpriteAlignment.TOP);
 		this.sprites = List.of(sprite);
-		this.setSize(new Vector2(0.2, 0.2));
+		this.setSize(new Vector2(0.2, 0.05));
 	}
 
 	@Override

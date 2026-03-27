@@ -1,22 +1,29 @@
 package dev.lucasfransson.shrinkmechanic.entities;
 
+import dev.lucasfransson.shrinkmechanic.engine.GameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
+import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 import javafx.scene.input.KeyCode;
 
-public class Player extends Entity {
+public class LocalPlayer extends Entity implements ITickable {
 
 	private final InputManager input;
 	private double walkSpeed = 3;
 
-	public Player(InputManager input) {
+	public LocalPlayer(InputManager input) {
 		super(new Sprite(Sprite.getTextureFromPath("/player.png")));
 		this.input = input;
-		this.setSize(new Vector2(0.2, 0.2));
+		this.setSize(new Vector2(0.2, 0.05));
 		this.setHasCollision(true);
 		getMainSprite().setSpriteAlignment(SpriteAlignment.TOP);
+	}
+
+	@Override
+	protected boolean shouldCollideWith(GameObject other) {
+		return !(other instanceof DroppedItem);
 	}
 
 	@Override
