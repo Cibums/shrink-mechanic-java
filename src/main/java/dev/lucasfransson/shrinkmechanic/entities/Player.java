@@ -1,12 +1,10 @@
 package dev.lucasfransson.shrinkmechanic.entities;
 
-import java.util.List;
-
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 import dev.lucasfransson.shrinkmechanic.items.Inventory;
-import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
+import dev.lucasfransson.shrinkmechanic.items.Item;
 
 public abstract class Player extends Entity {
 
@@ -21,15 +19,13 @@ public abstract class Player extends Entity {
 	}
 
 	@Override
-	public List<ItemDrop> getDrops() {
-		ItemDrop drop = ItemDrop.fromList(inventory.getItems());
-		return drop != null ? List.of(drop) : List.of();
-	}
-
-	@Override
 	public void onDestroy() {
-		// TODO Auto-generated method stub
-
+		Vector2 pos = getPosition();
+		for (Item item : inventory.getItems()) {
+			DroppedItem di = new DroppedItem(item);
+			di.setPosition(pos);
+			spawn(di);
+		}
 	}
 
 	public Inventory getInventory() {

@@ -10,6 +10,8 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
+import dev.lucasfransson.shrinkmechanic.entities.DroppedItem;
+import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 
 public abstract class WorldObject extends DestroyableGameObject
 		implements
@@ -42,6 +44,24 @@ public abstract class WorldObject extends DestroyableGameObject
 	public void setPosition(Vector2Int position) {
 		super.setPosition(new Vector2(position.x() + positionOffset.x(),
 				position.y() + positionOffset.y()));
+	}
+
+	public List<ItemDrop> getDrops() {
+		return List.of();
+	}
+
+	@Override
+	public void onDestroy() {
+		Vector2 pos = getPosition();
+		Random rnd = new Random();
+		for (ItemDrop drop : getDrops()) {
+			int amount = drop.resolveAmount(rnd);
+			for (int i = 0; i < amount; i++) {
+				DroppedItem di = new DroppedItem(drop.getItem());
+				di.setPosition(pos);
+				spawn(di);
+			}
+		}
 	}
 
 	protected void applyPositionRandomization(Random rnd, double posRange) {

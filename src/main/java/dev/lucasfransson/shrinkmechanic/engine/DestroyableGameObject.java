@@ -1,8 +1,5 @@
 package dev.lucasfransson.shrinkmechanic.engine;
 
-import java.util.List;
-
-import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.world.IDestroyable;
 
 public abstract class DestroyableGameObject extends GameObject
@@ -19,15 +16,12 @@ public abstract class DestroyableGameObject extends GameObject
 
 	public void destroy() {
 		destroyed = true;
+		onDestroy();
 		if (destroyCallback != null)
 			destroyCallback.run();
 	}
 
 	protected boolean isDestroyed() {
 		return destroyed;
-	}
-
-	public List<ItemDrop> getDrops() {
-		return List.of();
 	}
 }

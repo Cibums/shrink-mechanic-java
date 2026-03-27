@@ -43,7 +43,6 @@ public class Main extends Application {
 				collisionSystem, entitySystem, cameraSystem);
 
 		GameWorld world = new GameWorld(registry);
-		registry.setDropHandler(world::dropItems);
 
 		LocalPlayer player = registry.instantiate(new LocalPlayer(input));
 		Camera camera = registry.instantiate(new Camera(player, input));

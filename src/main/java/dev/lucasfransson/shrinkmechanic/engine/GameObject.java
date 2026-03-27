@@ -5,6 +5,16 @@ public class GameObject implements IPositioned {
 	private Vector2 position;
 	private Vector2 size;
 	private boolean hasCollision = false;
+	private Spawner spawner;
+
+	public void setSpawner(Spawner spawner) {
+		this.spawner = spawner;
+	}
+
+	protected void spawn(Object object) {
+		if (spawner != null)
+			spawner.spawn(object);
+	}
 
 	public GameObject() {
 		this(Vector2.zero(), false);

@@ -24,10 +24,6 @@ public class Flowers extends WorldObject implements IRandomizable {
 	}
 
 	@Override
-	public void onDestroy() {
-	}
-
-	@Override
 	public void randomize(Random rnd) {
 		getMainSprite().selectVariant(rnd);
 		getMainSprite().setFlipX(rnd.nextBoolean());

@@ -1,6 +1,5 @@
 package dev.lucasfransson.shrinkmechanic.items;
 
-import java.util.List;
 import java.util.Random;
 
 public class ItemDrop {
@@ -31,16 +30,5 @@ public class ItemDrop {
 		if (minAmount == maxAmount)
 			return minAmount;
 		return minAmount + rnd.nextInt(maxAmount - minAmount + 1);
-	}
-
-	public static ItemDrop fromList(List<Item> items) {
-		if (items == null || items.isEmpty())
-			return null;
-
-		Item first = items.getFirst();
-		long count = items.stream()
-				.filter(i -> i.getClass() == first.getClass()).count();
-
-		return new ItemDrop(first, (int) count, (int) count);
 	}
 }

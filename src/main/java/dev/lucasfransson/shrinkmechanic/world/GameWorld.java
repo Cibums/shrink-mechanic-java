@@ -12,8 +12,6 @@ import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
-import dev.lucasfransson.shrinkmechanic.entities.DroppedItem;
-import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
@@ -94,18 +92,6 @@ public class GameWorld {
 		}
 
 		notifyListeners(l -> l.onWorldObjectDestroyed(position));
-	}
-
-	public void dropItems(List<ItemDrop> drops, Vector2 center) {
-		Random rnd = new Random();
-		for (ItemDrop drop : drops) {
-			int amount = drop.resolveAmount(rnd);
-			for (int i = 0; i < amount; i++) {
-				DroppedItem droppedItem = new DroppedItem(drop.getItem());
-				droppedItem.setPosition(center);
-				registry.instantiate(droppedItem);
-			}
-		}
 	}
 
 	public void destroyTile(Vector2Int position) {

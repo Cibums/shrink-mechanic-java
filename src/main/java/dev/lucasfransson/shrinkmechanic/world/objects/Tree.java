@@ -30,7 +30,4 @@ public class Tree extends WorldObject implements IRandomizable {
 		return List.of(ItemDrop.of(new LogItem(), 1, 3));
 	}
 
-	@Override
-	public void onDestroy() {
-	}
 }

@@ -48,10 +48,9 @@ public abstract class Entity extends DestroyableGameObject
 		if (isDestroyed())
 			return;
 		for (GameObject other : getNearbyCollidables(1.5)) {
-			if (!(other instanceof Entity) || other == this)
+			if (other == this || !overlapsAABB(other))
 				continue;
-			if (!overlapsAABB(other))
-				continue;
+
 			Vector2 dir = getPosition().subtract(other.getPosition());
 			double len = Math.sqrt(dir.x() * dir.x() + dir.y() * dir.y());
 			if (len > 0.001) {
@@ -92,13 +91,15 @@ public abstract class Entity extends DestroyableGameObject
 			getMainSprite().setFlipX(dx < 0);
 		}
 
+		List<GameObject> stuckIn = getDeepOverlaps();
+
 		moveHorizontally(dx * deltaTime);
-		if (isCollidingWithAny()) {
+		if (hasNewCollision(stuckIn)) {
 			moveHorizontally(-dx * deltaTime);
 		}
 
 		moveVertically(dy * deltaTime);
-		if (isCollidingWithAny()) {
+		if (hasNewCollision(stuckIn)) {
 			moveVertically(-dy * deltaTime);
 		}
 
@@ -114,13 +115,36 @@ public abstract class Entity extends DestroyableGameObject
 		return true;
 	}
 
-	private boolean isCollidingWithAny() {
+	private static final double STUCK_PENETRATION_THRESHOLD = 0.01;
+
+	private List<GameObject> getDeepOverlaps() {
+		List<GameObject> stuck = new ArrayList<>();
 		for (GameObject other : getNearbyCollidables(2.0)) {
-			if (other == this)
+			if (other == this || !shouldCollideWith(other))
 				continue;
-			if (!shouldCollideWith(other))
+
+			if (penetrationDepth(other) > STUCK_PENETRATION_THRESHOLD)
+				stuck.add(other);
+		}
+		return stuck;
+	}
+
+	private double penetrationDepth(GameObject other) {
+		double overlapX = (getSize().x() / 2.0 + other.getSize().x() / 2.0)
+				- Math.abs(getPosition().x() - other.getPosition().x());
+		double overlapY = (getSize().y() / 2.0 + other.getSize().y() / 2.0)
+				- Math.abs(getPosition().y() - other.getPosition().y());
+		if (overlapX <= 0 || overlapY <= 0)
+			return 0;
+		return Math.min(overlapX, overlapY);
+	}
+
+	private boolean hasNewCollision(List<GameObject> exempt) {
+		for (GameObject other : getNearbyCollidables(2.0)) {
+			if (other == this || !shouldCollideWith(other))
 				continue;
-			if (overlapsAABB(other))
+
+			if (overlapsAABB(other) && !exempt.contains(other))
 				return true;
 		}
 		return false;

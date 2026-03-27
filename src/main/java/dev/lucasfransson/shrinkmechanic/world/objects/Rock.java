@@ -1,10 +1,13 @@
 package dev.lucasfransson.shrinkmechanic.world.objects;
 
+import java.util.List;
 import java.util.Random;
 
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
+import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
+import dev.lucasfransson.shrinkmechanic.items.RockItem;
 
 public class Rock extends WorldObject implements IRandomizable {
 
@@ -21,6 +24,7 @@ public class Rock extends WorldObject implements IRandomizable {
 	}
 
 	@Override
-	public void onDestroy() {
+	public List<ItemDrop> getDrops() {
+		return List.of(ItemDrop.of(new RockItem(), 1, 3));
 	}
 }
