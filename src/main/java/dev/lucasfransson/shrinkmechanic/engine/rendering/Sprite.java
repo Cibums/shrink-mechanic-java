@@ -1,5 +1,7 @@
 package dev.lucasfransson.shrinkmechanic.engine.rendering;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -16,7 +18,16 @@ import javafx.scene.paint.Color;
 public class Sprite {
 
 	private static final Map<String, Image> imageCache = new ConcurrentHashMap<>();
-	private static final Map<String, Image> tintedImageCache = new ConcurrentHashMap<>();
+	private static final int TINT_CACHE_MAX_SIZE = 1024;
+	private static final Map<String, Image> tintedImageCache = Collections
+			.synchronizedMap(
+					new LinkedHashMap<>(TINT_CACHE_MAX_SIZE, 0.75f, true) {
+						@Override
+						protected boolean removeEldestEntry(
+								Map.Entry<String, Image> eldest) {
+							return size() > TINT_CACHE_MAX_SIZE;
+						}
+					});
 	private static final Image DEFAULT_IMAGE = new Image("default.png");
 
 	private final List<Image> variants;

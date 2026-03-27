@@ -7,16 +7,21 @@ public class GameObject implements IPositioned {
 	private boolean hasCollision = false;
 
 	public GameObject() {
-		this(Vector2.zero());
+		this(Vector2.zero(), false);
 	}
 
-	public GameObject(Vector2 position) {
-		this(position, new Vector2(1.0, 1.0));
+	public GameObject(boolean hasCollision) {
+		this(Vector2.zero(), hasCollision);
 	}
 
-	public GameObject(Vector2 position, Vector2 size) {
+	public GameObject(Vector2 position, boolean hasCollision) {
+		this(position, new Vector2(1.0, 1.0), hasCollision);
+	}
+
+	public GameObject(Vector2 position, Vector2 size, boolean hasCollision) {
 		this.setSize(size);
 		this.setPosition(position);
+		this.hasCollision = hasCollision;
 	}
 
 	public Vector2 getPosition() {

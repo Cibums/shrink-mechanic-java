@@ -43,8 +43,4 @@ public class Animation {
 	public List<Image> getFrames() {
 		return Collections.unmodifiableList(frames);
 	}
-
-	public double getTimeBetweenFrames() {
-		return this.playTime / this.getFrames().size();
-	}
 }

@@ -4,17 +4,12 @@ import java.util.List;
 
 import dev.lucasfransson.shrinkmechanic.engine.CollisionSystem;
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
-import dev.lucasfransson.shrinkmechanic.engine.Vector2;
-import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
-import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Camera;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteEntry;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
-import dev.lucasfransson.shrinkmechanic.world.ReplacementMode;
-import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 import javafx.animation.AnimationTimer;
 
 public class GameLoop extends AnimationTimer {
@@ -25,18 +20,16 @@ public class GameLoop extends AnimationTimer {
 	private final CollisionSystem collisionSystem;
 	private final Camera camera;
 	private final GameWorld world;
-	private final InputManager input;
 
 	public GameLoop(GameCanvas canvas, TickSystem tickSystem,
 			RenderSystem renderSystem, CollisionSystem collisionSystem,
-			Camera camera, GameWorld world, InputManager input) {
+			Camera camera, GameWorld world) {
 		this.canvas = canvas;
 		this.tickSystem = tickSystem;
 		this.renderSystem = renderSystem;
 		this.collisionSystem = collisionSystem;
 		this.camera = camera;
 		this.world = world;
-		this.input = input;
 	}
 
 	private long lastUpdate = System.nanoTime();
@@ -45,19 +38,6 @@ public class GameLoop extends AnimationTimer {
 	public void handle(long now) {
 		double deltaTime = (now - lastUpdate) / 1_000_000_000.0;
 		lastUpdate = now;
-
-		Vector2 left = input.consumeLeftClick();
-		if (left != null) {
-			Vector2Int tilePosition = canvas.screenToWorld(left);
-			world.placeWorldObject(tilePosition, new Tree(),
-					ReplacementMode.KEEP);
-		}
-
-		Vector2 right = input.consumeRightClick();
-		if (right != null) {
-			Vector2Int tile = canvas.screenToWorld(right);
-			world.destroyWorldObject(tile);
-		}
 
 		collisionSystem.updateDynamicPositions();
 		tickSystem.update(deltaTime);
@@ -73,5 +53,4 @@ public class GameLoop extends AnimationTimer {
 		renderSystem.updateAnimations(deltaTime, visible);
 		canvas.render(visible);
 	}
-
 }

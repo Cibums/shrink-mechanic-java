@@ -10,6 +10,7 @@ public class CollisionSystem implements IGameSystem {
 	private final Map<Long, List<GameObject>> cells = new HashMap<>();
 	private final Map<GameObject, Long> objectCells = new HashMap<>();
 	private final List<GameObject> dynamicObjects = new ArrayList<>();
+	private final List<GameObject> queryBuffer = new ArrayList<>();
 
 	public void register(GameObject obj) {
 		if (!obj.hasCollision())
@@ -72,7 +73,7 @@ public class CollisionSystem implements IGameSystem {
 	}
 
 	public List<GameObject> getNearbyCollidables(Vector2 center, double range) {
-		List<GameObject> result = new ArrayList<>();
+		queryBuffer.clear();
 
 		int minX = (int) Math.floor(center.x() - range);
 		int maxX = (int) Math.floor(center.x() + range);
@@ -83,12 +84,12 @@ public class CollisionSystem implements IGameSystem {
 			for (int cy = minY; cy <= maxY; cy++) {
 				List<GameObject> cell = cells.get(cellKey(cx, cy));
 				if (cell != null) {
-					result.addAll(cell);
+					queryBuffer.addAll(cell);
 				}
 			}
 		}
 
-		return result;
+		return queryBuffer;
 	}
 
 	private long cellKey(Vector2 pos) {

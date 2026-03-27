@@ -23,7 +23,6 @@ public abstract class Tile extends GameObject
 		sprite.setSpriteAlignment(SpriteAlignment.CENTER);
 		sprites.add(sprite);
 		this.setSize(new Vector2(1.0, 1.0));
-		this.setHasCollision(false);
 	}
 
 	protected Sprite getMainSprite() {

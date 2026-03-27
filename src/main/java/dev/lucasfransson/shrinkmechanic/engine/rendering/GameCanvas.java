@@ -36,12 +36,16 @@ public class GameCanvas extends Canvas {
 		this.renderSystem = renderSystem;
 		this.camera = camera;
 
-		onStageWindowResize(stage);
+		updateDimensions(stage);
+	}
+
+	private void updateDimensions(Stage stage) {
+		setCanvasWidth(stage.widthProperty().doubleValue());
+		setCanvasHeight(stage.heightProperty().doubleValue());
 	}
 
 	private void onStageWindowResize(Stage stage) {
-		setCanvasWidth(stage.widthProperty().doubleValue());
-		setCanvasHeight(stage.heightProperty().doubleValue());
+		updateDimensions(stage);
 		render();
 	}
 

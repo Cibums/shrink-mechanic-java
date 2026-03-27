@@ -21,7 +21,6 @@ public abstract class WorldObject extends GameObject
 	private Vector2 positionOffset = Vector2.zero();
 
 	protected WorldObject(Sprite sprite) {
-		sprite.setRenderingLayer(1);
 		sprites.add(sprite);
 		this.getMainSprite().setRenderingLayer(2);
 		this.setSize(new Vector2(0.3125, 0.3125));
