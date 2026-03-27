@@ -109,7 +109,8 @@ public class Chunk {
 	public void placeWorldObject(int localX, int localY, WorldObject obj,
 			ObjectRegistry registry, ReplacementMode mode) {
 
-		if (!tiles[localX][localY].canBePlacedOn()) {
+		if (tiles[localX][localY] == null
+				|| !tiles[localX][localY].canBePlacedOn()) {
 			return;
 		}
 

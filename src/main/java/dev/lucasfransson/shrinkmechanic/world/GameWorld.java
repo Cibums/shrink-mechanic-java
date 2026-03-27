@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
@@ -18,14 +19,13 @@ import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
 public class GameWorld {
 
 	private final ObjectRegistry registry;
-	private WorldEventListener eventListener;
 	private final Map<ChunkCoord, Chunk> chunks = new HashMap<>();
 	private final Set<ChunkCoord> activeChunks = new HashSet<>();
 	private final PerlinNoise groundNoise;
 	private final PerlinNoise forestNoise;
 	private final long worldSeed;
-
 	private ChunkCoord lastPlayerChunk = null;
+	private final List<WorldEventListener> eventListeners = new ArrayList<>();
 
 	public GameWorld(ObjectRegistry registry) {
 		this.registry = registry;
@@ -91,8 +91,7 @@ public class GameWorld {
 					localCoord(position.y()), registry);
 		}
 
-		if (eventListener != null)
-			eventListener.onWorldObjectDestroyed(position);
+		notifyListeners(l -> l.onWorldObjectDestroyed(position));
 	}
 
 	public void destroyTile(Vector2Int position) {
@@ -103,8 +102,7 @@ public class GameWorld {
 					localCoord(position.y()), registry);
 		}
 
-		if (eventListener != null)
-			eventListener.onTileDestroyed(position);
+		notifyListeners(l -> l.onTileDestroyed(position));
 	}
 
 	public void placeWorldObject(Vector2Int position, WorldObject object,
@@ -118,8 +116,7 @@ public class GameWorld {
 					activeChunks.contains(coord) ? registry : null, mode);
 		}
 
-		if (eventListener != null)
-			eventListener.onWorldObjectPlaced(position, object);
+		notifyListeners(l -> l.onWorldObjectPlaced(position, object));
 	}
 
 	public void placeTile(Vector2Int position, Tile tile,
@@ -131,8 +128,7 @@ public class GameWorld {
 					tile, activeChunks.contains(coord) ? registry : null, mode);
 		}
 
-		if (eventListener != null)
-			eventListener.onTilePlaced(position, tile);
+		notifyListeners(l -> l.onTilePlaced(position, tile));
 	}
 
 	private ChunkCoord toChunkCoord(Vector2Int pos) {
@@ -144,7 +140,18 @@ public class GameWorld {
 		return Math.floorMod(worldCoord, GameConfig.CHUNK_SIZE);
 	}
 
-	public void setEventListener(WorldEventListener listener) {
-		this.eventListener = listener;
+	public void addEventListener(WorldEventListener listener) {
+		eventListeners.add(listener);
 	}
+
+	public void removeEventListener(WorldEventListener listener) {
+		eventListeners.remove(listener);
+	}
+
+	private void notifyListeners(Consumer<WorldEventListener> action) {
+		for (WorldEventListener listener : eventListeners) {
+			action.accept(listener);
+		}
+	}
+
 }
