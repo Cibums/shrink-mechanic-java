@@ -15,8 +15,11 @@ public class DroppedItem extends Entity implements ITickable, ICollidable {
 	private static final double MIN_SPEED = 1.5;
 	private static final double MAX_SPEED = 3.0;
 
+	private final Item item;
+
 	public DroppedItem(Item item) {
 		super(item.getSprite());
+		this.item = item;
 		this.setSize(new Vector2(0.25, 0.25));
 		this.getMainSprite().setSpriteAlignment(SpriteAlignment.CENTER);
 		this.setDrag(DRAG);
@@ -35,8 +38,10 @@ public class DroppedItem extends Entity implements ITickable, ICollidable {
 
 	@Override
 	public void onCollidedWith(GameObject other) {
-		if (other instanceof LocalPlayer)
+		if (other instanceof LocalPlayer player) {
+			player.getInventory().addItem(item);
 			destroy();
+		}
 	}
 
 	@Override

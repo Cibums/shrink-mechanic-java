@@ -45,6 +45,8 @@ public abstract class Entity extends DestroyableGameObject
 	}
 
 	protected void applyPhysics(double deltaTime) {
+		if (isDestroyed())
+			return;
 		for (GameObject other : getNearbyCollidables(1.5)) {
 			if (!(other instanceof Entity) || other == this)
 				continue;
@@ -84,6 +86,8 @@ public abstract class Entity extends DestroyableGameObject
 	}
 
 	protected void moveWithCollision(double dx, double dy, double deltaTime) {
+		if (isDestroyed())
+			return;
 		if (dx != 0 && flipSpriteOnMove) {
 			getMainSprite().setFlipX(dx < 0);
 		}

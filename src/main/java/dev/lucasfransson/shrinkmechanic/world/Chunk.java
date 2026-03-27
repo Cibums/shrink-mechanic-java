@@ -1,12 +1,10 @@
 package dev.lucasfransson.shrinkmechanic.world;
 
-import java.util.List;
 import java.util.Random;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
-import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
 import dev.lucasfransson.shrinkmechanic.world.objects.Flowers;
 import dev.lucasfransson.shrinkmechanic.world.objects.IRandomizable;
@@ -174,14 +172,12 @@ public class Chunk {
 		return objects[localX][localY];
 	}
 
-	public List<ItemDrop> destroyObject(int localX, int localY) {
+	public void destroyObject(int localX, int localY) {
 		if (objects[localX][localY] == null)
-			return List.of();
-		List<ItemDrop> drops = objects[localX][localY].getDrops();
+			return;
 		objects[localX][localY].onDestroy();
 		objects[localX][localY].destroy();
 		objects[localX][localY] = null;
-		return drops;
 	}
 
 	public void destroyTile(int localX, int localY) {

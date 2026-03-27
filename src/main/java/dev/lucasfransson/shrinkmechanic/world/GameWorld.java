@@ -89,25 +89,23 @@ public class GameWorld {
 		ChunkCoord coord = toChunkCoord(position);
 		Chunk chunk = chunks.get(coord);
 		if (chunk != null) {
-			int lx = localCoord(position.x());
-			int ly = localCoord(position.y());
-			WorldObject obj = chunk.getObject(lx, ly);
-			Vector2 spawnPos = obj != null
-					? obj.getPosition()
-					: new Vector2(position.x() + 0.5, position.y() + 0.5);
-			List<ItemDrop> drops = chunk.destroyObject(lx, ly);
-			Random rnd = new Random();
-			for (ItemDrop drop : drops) {
-				int amount = drop.resolveAmount(rnd);
-				for (int i = 0; i < amount; i++) {
-					DroppedItem droppedItem = new DroppedItem(drop.getItem());
-					droppedItem.setPosition(spawnPos);
-					registry.instantiate(droppedItem);
-				}
-			}
+			chunk.destroyObject(localCoord(position.x()),
+					localCoord(position.y()));
 		}
 
 		notifyListeners(l -> l.onWorldObjectDestroyed(position));
+	}
+
+	public void dropItems(List<ItemDrop> drops, Vector2 center) {
+		Random rnd = new Random();
+		for (ItemDrop drop : drops) {
+			int amount = drop.resolveAmount(rnd);
+			for (int i = 0; i < amount; i++) {
+				DroppedItem droppedItem = new DroppedItem(drop.getItem());
+				droppedItem.setPosition(center);
+				registry.instantiate(droppedItem);
+			}
+		}
 	}
 
 	public void destroyTile(Vector2Int position) {

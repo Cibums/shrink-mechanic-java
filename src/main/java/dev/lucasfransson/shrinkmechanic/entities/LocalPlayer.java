@@ -29,6 +29,9 @@ public class LocalPlayer extends Player implements ITickable {
 		double dx = 0;
 		double dy = 0;
 
+		if (input.isKeyHeld(KeyCode.K))
+			destroy();
+
 		if (input.isKeyHeld(KeyCode.W))
 			dy += walkSpeed;
 		if (input.isKeyHeld(KeyCode.S))

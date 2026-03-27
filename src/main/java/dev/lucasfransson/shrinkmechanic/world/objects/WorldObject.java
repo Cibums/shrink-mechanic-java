@@ -7,15 +7,16 @@ import java.util.Random;
 
 import dev.lucasfransson.shrinkmechanic.engine.DestroyableGameObject;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.IRenderable;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
-import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 
 public abstract class WorldObject extends DestroyableGameObject
 		implements
 			IRenderable {
 
 	private final List<Sprite> sprites = new ArrayList<>();
+	private Vector2 positionOffset = Vector2.zero();
 
 	protected WorldObject(Sprite sprite) {
 		sprites.add(sprite);
@@ -37,14 +38,15 @@ public abstract class WorldObject extends DestroyableGameObject
 		return Collections.unmodifiableList(sprites);
 	}
 
-	public List<ItemDrop> getDrops() {
-		return List.of();
+	@Override
+	public void setPosition(Vector2Int position) {
+		super.setPosition(new Vector2(position.x() + positionOffset.x(),
+				position.y() + positionOffset.y()));
 	}
 
 	protected void applyPositionRandomization(Random rnd, double posRange) {
-		Vector2 offset = new Vector2((rnd.nextDouble() * 2 - 1) * posRange,
+		positionOffset = new Vector2((rnd.nextDouble() * 2 - 1) * posRange,
 				(rnd.nextDouble() * 2 - 1) * posRange);
-		getMainSprite().setOffset(offset);
 	}
 
 	protected void applySizeRandomization(Random rnd, double scaleMin,
