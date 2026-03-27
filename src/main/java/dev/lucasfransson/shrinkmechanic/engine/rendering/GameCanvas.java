@@ -132,6 +132,9 @@ public class GameCanvas extends Canvas {
 		double worldY = camera.getPosition().y()
 				- (screenPos.y() - canvasHeight / 2.0 + (grid * zoom) / 2.0)
 						/ (grid * zoom);
+
+		// X uses floor, Y uses ceil because the Y axis is inverted in screen
+		// space
 		return new Vector2Int((int) Math.floor(worldX),
 				(int) Math.ceil(worldY));
 	}

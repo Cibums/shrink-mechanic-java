@@ -1,9 +1,12 @@
 package dev.lucasfransson.shrinkmechanic.entities;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import dev.lucasfransson.shrinkmechanic.engine.IGameSystem;
+import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 
 public class EntitySystem implements IGameSystem {
 
@@ -27,5 +30,17 @@ public class EntitySystem implements IGameSystem {
 
 	private void unregister(Entity e) {
 		entities.remove(e);
+	}
+
+	public List<Entity> getEntitiesInRange(Vector2 center, double range) {
+		List<Entity> result = new ArrayList<>();
+		for (Entity e : entities) {
+			Vector2 pos = e.getPosition();
+			if (Math.abs(pos.x() - center.x()) <= range
+					&& Math.abs(pos.y() - center.y()) <= range) {
+				result.add(e);
+			}
+		}
+		return result;
 	}
 }
