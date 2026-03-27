@@ -59,7 +59,7 @@ public class CollisionSystem implements IGameSystem {
 			Long oldKey = objectCells.get(obj);
 			long newKey = cellKey(obj.getPosition());
 
-			if (oldKey != null && oldKey != newKey) {
+			if (oldKey != null && !oldKey.equals(newKey)) {
 				List<GameObject> oldCell = cells.get(oldKey);
 				if (oldCell != null) {
 					oldCell.remove(obj);

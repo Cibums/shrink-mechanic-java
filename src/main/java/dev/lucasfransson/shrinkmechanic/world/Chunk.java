@@ -178,6 +178,7 @@ public class Chunk {
 		if (objects[localX][localY] == null)
 			return List.of();
 		List<ItemDrop> drops = objects[localX][localY].getDrops();
+		objects[localX][localY].onDestroy();
 		objects[localX][localY].destroy();
 		objects[localX][localY] = null;
 		return drops;
@@ -185,6 +186,7 @@ public class Chunk {
 
 	public void destroyTile(int localX, int localY) {
 		if (tiles[localX][localY] != null) {
+			tiles[localX][localY].onDestroy();
 			tiles[localX][localY].destroy();
 			tiles[localX][localY] = null;
 		}
