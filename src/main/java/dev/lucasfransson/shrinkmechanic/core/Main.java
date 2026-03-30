@@ -8,6 +8,7 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.Camera;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.CameraSystem;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.RenderSystem;
+import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.tick.TickSystem;
 import dev.lucasfransson.shrinkmechanic.entities.EntitySystem;
 import dev.lucasfransson.shrinkmechanic.entities.LocalPlayer;
@@ -29,6 +30,9 @@ public class Main extends Application {
 
 		stage.setWidth(960);
 		stage.setHeight(720);
+
+		stage.getIcons().add(Sprite.getTextureFromPath("/items/log.png"));
+		stage.setTitle("Shrink Mechanic");
 
 		VBox layout = new VBox();
 
