@@ -38,31 +38,26 @@ jobs:
           git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
           cat /tmp/changed_files.txt
 
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: Run Claude peer review
         id: review
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          REVIEW=$(python3 << 'PYTHON_EOF'
-          import json
-          import os
-          import urllib.request
+          DIFF=$(cat /tmp/pr_diff.txt)
+          CHANGED_FILES=$(cat /tmp/changed_files.txt)
 
-          # Read diff and changed files
-          with open('/tmp/pr_diff.txt') as f:
-              diff = f.read()
-          with open('/tmp/changed_files.txt') as f:
-              changed_files = f.read()
-
-          system_prompt = "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review."
-
-          user_prompt = f"""Review this pull request diff as a senior developer and product owner.
+          REVIEW=$(claude --print --output-format json --max-turns 3 --model claude-3-5-sonnet-20241022 \
+            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review." \
+            "Review this pull request diff as a senior developer and product owner.
 
           Changed files:
-          {changed_files}
+          $CHANGED_FILES
 
           Diff:
-          {diff}
+          $DIFF
 
           Evaluate the following aspects:
           1. Code correctness and logic errors
@@ -75,84 +70,35 @@ jobs:
           8. Maven/build configuration issues
 
           Respond with ONLY a JSON object in this exact format:
-          {{
-            "verdict": "APPROVE" or "REQUEST_CHANGES",
-            "summary": "2-3 sentence overall assessment",
-            "findings": [
-              {{
-                "severity": "critical" or "major" or "minor" or "nit",
-                "file": "path/to/file.java",
-                "line": 42,
-                "description": "what the issue is and how to fix it"
-              }}
+          {
+            \"verdict\": \"APPROVE\" or \"REQUEST_CHANGES\",
+            \"summary\": \"2-3 sentence overall assessment\",
+            \"findings\": [
+              {
+                \"severity\": \"critical\" or \"major\" or \"minor\" or \"nit\",
+                \"file\": \"path/to/file.java\",
+                \"line\": 42,
+                \"description\": \"what the issue is and how to fix it\"
+              }
             ],
-            "multiplayer_concerns": "any concerns about future multiplayer support, or null"
-          }}
+            \"multiplayer_concerns\": \"any concerns about future multiplayer support, or null\"
+          }
 
           Rules for verdict:
           - APPROVE if there are no critical or major findings
           - REQUEST_CHANGES if there is at least one critical or major finding
           - A 'critical' finding is a bug, security issue, or data loss risk
           - A 'major' finding is a significant design flaw or performance regression
-          - Minor issues and nits alone should NOT block the PR"""
-
-          payload = {
-              "model": "claude-3-5-sonnet-20241022",
-              "max_tokens": 4096,
-              "system": system_prompt,
-              "messages": [
-                  {
-                      "role": "user",
-                      "content": user_prompt
-                  }
-              ]
-          }
-
-          api_key = os.environ['ANTHROPIC_API_KEY']
-
-          req = urllib.request.Request(
-              'https://api.anthropic.com/v1/messages',
-              data=json.dumps(payload).encode('utf-8'),
-              headers={
-                  'x-api-key': api_key,
-                  'anthropic-version': '2023-06-01',
-                  'content-type': 'application/json'
-              }
-          )
-
-          with urllib.request.urlopen(req) as response:
-              result = json.loads(response.read().decode('utf-8'))
-              print(json.dumps(result))
-          PYTHON_EOF
-          )
+          - Minor issues and nits alone should NOT block the PR")
 
           echo "$REVIEW" > /tmp/review_output.json
           cat /tmp/review_output.json
-
-      - name: Extract review content
-        id: extract
-        run: |
-          # Extract the text content from Claude's API response
-          python3 -c "
-          import json, sys
-          
-          with open('/tmp/review_output.json', 'r') as f:
-              response = json.load(f)
-          
-          # Get the text from the first content block
-          if 'content' in response and len(response['content']) > 0:
-              text_content = response['content'][0]['text']
-              with open('/tmp/claude_review.txt', 'w') as f:
-                  f.write(text_content)
-          else:
-              sys.exit(1)
-          "
 
       - name: Parse review verdict
         id: verdict
         run: |
           # Extract the JSON from Claude's response (handle potential text wrapping)
-          REVIEW=$(cat /tmp/claude_review.txt)
+          REVIEW=$(cat /tmp/review_output.json)
 
           # Try to extract JSON if wrapped in markdown fences or other text
           JSON=$(echo "$REVIEW" | python3 -c "
@@ -163,6 +109,21 @@ jobs:
               obj = json.loads(text)
               print(json.dumps(obj))
               sys.exit(0)
+          except json.JSONDecodeError:
+              pass
+          # Try to find JSON in text content blocks
+          try:
+              parsed = json.loads(text)
+              if isinstance(parsed, list):
+                  for block in parsed:
+                      if isinstance(block, dict) and block.get('type') == 'text':
+                          inner = block['text']
+                          try:
+                              obj = json.loads(inner)
+                              print(json.dumps(obj))
+                              sys.exit(0)
+                          except json.JSONDecodeError:
+                              pass
           except json.JSONDecodeError:
               pass
           # Try regex extraction
