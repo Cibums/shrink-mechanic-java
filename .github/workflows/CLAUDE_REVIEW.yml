@@ -99,7 +99,7 @@ jobs:
             --max-turns 3 \
             --model claude-sonnet-4-6 \
             --dangerously-skip-permissions \
-            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Give feedback of the class structure and code from an object orianted perspective. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
+            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
             > /tmp/review_output.json 2>/tmp/review_error.txt
           EXIT_CODE=$?
           set -e
@@ -125,41 +125,53 @@ jobs:
           with open("/tmp/review_output.json", "r") as f:
               text = f.read()
 
-          result = None
+          review = None
 
-          # Try direct parse
-          try:
-              result = json.loads(text)
-          except json.JSONDecodeError:
-              pass
+          def strip_fences(s):
+              """Remove markdown code fences like ```json ... ```"""
+              s = s.strip()
+              s = re.sub(r'^```\w*\n?', '', s)
+              s = re.sub(r'\n?```$', '', s)
+              return s.strip()
 
-          # Try to find JSON inside text content blocks (output-format json wraps in array)
-          if result is None:
+          def try_parse(s):
               try:
-                  parsed = json.loads(text)
-                  if isinstance(parsed, list):
-                      for block in parsed:
-                          if isinstance(block, dict) and block.get("type") == "text":
-                              try:
-                                  result = json.loads(block["text"])
-                                  break
-                              except json.JSONDecodeError:
-                                  pass
-              except json.JSONDecodeError:
-                  pass
+                  return json.loads(s)
+              except (json.JSONDecodeError, TypeError):
+                  return None
 
-          # Try regex extraction
-          if result is None:
-              match = re.search(r'\{[\s\S]*"verdict"[\s\S]*\}', text)
+          # Step 1: Parse the outer Claude Code JSON envelope
+          outer = try_parse(text)
+
+          if isinstance(outer, dict) and "result" in outer:
+              # --output-format json wraps response in {"type":"result","result":"..."}
+              inner_text = strip_fences(outer["result"])
+              review = try_parse(inner_text)
+
+          # Step 2: Try parsing as array of content blocks
+          if review is None and isinstance(outer, list):
+              for block in outer:
+                  if isinstance(block, dict) and block.get("type") == "text":
+                      inner_text = strip_fences(block["text"])
+                      review = try_parse(inner_text)
+                      if review and "verdict" in review:
+                          break
+
+          # Step 3: Try direct parse (maybe it's already the review JSON)
+          if review is None:
+              review = try_parse(text)
+
+          # Step 4: Regex extraction as last resort
+          if review is None or "verdict" not in review:
+              match = re.search(r'\{[^{}]*"verdict"\s*:\s*"[^"]*"[^{}]*\}', text)
+              if not match:
+                  match = re.search(r'\{[\s\S]*"verdict"[\s\S]*\}', text)
               if match:
-                  try:
-                      result = json.loads(match.group())
-                  except json.JSONDecodeError:
-                      pass
+                  review = try_parse(match.group())
 
           # Fallback
-          if result is None or "verdict" not in result:
-              result = {
+          if review is None or "verdict" not in review:
+              review = {
                   "verdict": "REQUEST_CHANGES",
                   "summary": "Failed to parse review output. Blocking as a precaution.",
                   "findings": [],
@@ -168,14 +180,17 @@ jobs:
 
           # Write parsed JSON to file for later steps
           with open("/tmp/review_parsed.json", "w") as f:
-              json.dump(result, f)
+              json.dump(review, f)
 
           # Write verdict to GitHub output
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"verdict={result['verdict']}\n")
+              f.write(f"verdict={review['verdict']}\n")
 
-          print(f"Verdict: {result['verdict']}")
-          print(f"Summary: {result['summary']}")
+          print(f"Verdict: {review['verdict']}")
+          print(f"Summary: {review.get('summary', 'N/A')}")
+          if review.get("findings"):
+              for f in review["findings"]:
+                  print(f"  [{f['severity']}] {f.get('file','')}: {f['description'][:100]}")
           PYEOF
 
       - name: Post review comment
