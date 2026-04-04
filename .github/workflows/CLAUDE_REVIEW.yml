@@ -153,6 +153,30 @@ jobs:
               except (json.JSONDecodeError, TypeError):
                   return None
 
+          def find_json_with_verdict(s):
+              """Find a JSON object containing 'verdict' anywhere in a string."""
+              # Look for opening brace, try parsing from each one
+              start = 0
+              while True:
+                  idx = s.find('{', start)
+                  if idx == -1:
+                      break
+                  # Find matching closing brace by trying progressively longer substrings
+                  depth = 0
+                  for end in range(idx, len(s)):
+                      if s[end] == '{':
+                          depth += 1
+                      elif s[end] == '}':
+                          depth -= 1
+                          if depth == 0:
+                              candidate = s[idx:end+1]
+                              parsed = try_parse(candidate)
+                              if parsed and isinstance(parsed, dict) and "verdict" in parsed:
+                                  return parsed
+                              break
+                  start = idx + 1
+              return None
+
           # Step 1: Parse the outer Claude Code JSON envelope
           outer = try_parse(text)
 
@@ -168,6 +192,9 @@ jobs:
               # Third try: parse result directly
               if review is None:
                   review = try_parse(result_text)
+              # Fourth try: find JSON object with verdict anywhere in result text
+              if review is None or "verdict" not in review:
+                  review = find_json_with_verdict(result_text)
 
           # Step 2: Try parsing as array of content blocks
           if review is None and isinstance(outer, list):
