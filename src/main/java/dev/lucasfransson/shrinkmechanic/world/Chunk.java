@@ -116,9 +116,6 @@ public class Chunk {
 		WorldObject existing = objects[localX][localY];
 		if (existing != null) {
 			switch (mode) {
-				case KEEP -> {
-					return;
-				}
 				case DESTROY -> {
 					existing.onDestroy();
 					if (registry != null)
@@ -128,6 +125,8 @@ public class Chunk {
 					if (registry != null)
 						registry.destroy(existing);
 				}
+				default -> throw new IllegalArgumentException(
+						"Unexpected value: " + mode);
 			}
 		}
 

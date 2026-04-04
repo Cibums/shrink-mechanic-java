@@ -49,7 +49,8 @@ public class PlayerInteraction implements ITickable {
 				tilePosition = canvas.screenToWorld(mousePos);
 
 				boolean itemChanged = this.selectedItem != this.selectedItemCache;
-				boolean tileChanged = !tilePosition.equals(mouseTilePositionCache);
+				boolean tileChanged = !tilePosition
+						.equals(mouseTilePositionCache);
 
 				if (itemChanged) {
 					previewWorldObject = placeableItem.createWorldObject();
@@ -60,6 +61,9 @@ public class PlayerInteraction implements ITickable {
 					updatePreview(tilePosition);
 					this.mouseTilePositionCache = tilePosition;
 				}
+			} else {
+				if (previewObject != null)
+					previewObject.hide();
 			}
 
 			Vector2 left = input.consumeLeftClick();
