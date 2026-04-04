@@ -10,11 +10,11 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 public class PreviewObject implements IRenderable, IPositioned {
 
 	private Vector2 position;
-	private Sprite sprite;
+	private final Sprite sprite;
 
 	public PreviewObject() {
 		this.position = Vector2.zero();
-		this.sprite = new Sprite(Sprite.DEFAULT_IMAGE);
+		this.sprite = new Sprite();
 	}
 
 	@Override
@@ -37,6 +37,11 @@ public class PreviewObject implements IRenderable, IPositioned {
 
 	public void setWorldObject(WorldObject obj) {
 		this.position = obj.getPosition();
-		this.sprite = obj.getSprites().getFirst();
+		Sprite source = obj.getSprites().getFirst();
+		this.sprite.setTexture(source.getTexture());
+		this.sprite.setSpriteYOffset(source.getSpriteYOffset());
+		this.sprite.setScale(source.getScale());
+		this.sprite.setOffset(source.getOffset());
+		this.sprite.setRenderingLayer(source.getRenderingLayer());
 	}
 }

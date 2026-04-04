@@ -56,7 +56,7 @@ public class Main extends Application {
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera);
 
 		registry.instantiate(new Cursor(input, canvas));
-		registry.instantiate(new PlayerInteraction(input, canvas, world));
+		registry.instantiate(new PlayerInteraction(input, canvas, world, registry));
 
 		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem,
 				collisionSystem, camera, world);
