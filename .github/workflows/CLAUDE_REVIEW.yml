@@ -93,15 +93,28 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          cat /tmp/prompt.txt | claude --print \
+          set +e
+          cat /tmp/prompt.txt | claude -p \
             --output-format json \
             --max-turns 3 \
             --model claude-sonnet-4-6 \
+            --dangerously-skip-permissions \
             --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
-            > /tmp/review_output.json
+            > /tmp/review_output.json 2>/tmp/review_error.txt
+          EXIT_CODE=$?
+          set -e
 
-          echo "Raw output:"
+          echo "=== Claude exit code: $EXIT_CODE ==="
+          echo "=== stderr output ==="
+          cat /tmp/review_error.txt
+          echo "=== stdout output ==="
           cat /tmp/review_output.json
+          echo "=== end output ==="
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::Claude Code CLI failed with exit code $EXIT_CODE"
+            exit 1
+          fi
 
       - name: Parse review verdict
         id: verdict
