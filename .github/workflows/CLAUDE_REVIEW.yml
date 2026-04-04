@@ -86,22 +86,40 @@ jobs:
           - Minor issues and nits alone should NOT block the PR
           PROMPT_FOOTER
 
-      - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+      - name: Install dependencies
+        run: pip install anthropic
 
       - name: Run Claude peer review
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          cat /tmp/prompt.txt | claude --print \
-            --output-format json \
-            --max-turns 3 \
-            --model claude-sonnet-4-6 \
-            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
-            > /tmp/review_output.json
+          python3 << 'PYEOF'
+          import anthropic
+          import json
+
+          with open("/tmp/prompt.txt", "r") as f:
+              prompt = f.read()
+
+          client = anthropic.Anthropic(api_key="${ANTHROPIC_API_KEY}")
+
+          message = client.messages.create(
+              model="claude-3-5-sonnet-20241022",
+              max_tokens=2048,
+              messages=[
+                  {
+                      "role": "user",
+                      "content": prompt
+                  }
+              ],
+              system="You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review."
+          )
+
+          with open("/tmp/review_output.json", "w") as f:
+              f.write(message.content[0].text)
 
           echo "Raw output:"
           cat /tmp/review_output.json
+          PYEOF
 
       - name: Parse review verdict
         id: verdict
