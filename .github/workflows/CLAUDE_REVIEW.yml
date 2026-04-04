@@ -1,0 +1,251 @@
+name: "Claude Peer Review"
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr_diff.txt
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          echo "Changed files:"
+          cat /tmp/changed_files.txt
+          echo "Diff lines: $(wc -l < /tmp/pr_diff.txt)"
+
+      - name: Build review prompt
+        run: |
+          cat > /tmp/prompt.txt << 'PROMPT_HEADER'
+          Review this pull request diff. Here are the changed files and the diff:
+
+          Changed files:
+          PROMPT_HEADER
+
+          cat /tmp/changed_files.txt >> /tmp/prompt.txt
+
+          cat >> /tmp/prompt.txt << 'PROMPT_MIDDLE'
+
+          Diff:
+          PROMPT_MIDDLE
+
+          cat /tmp/pr_diff.txt >> /tmp/prompt.txt
+
+          cat >> /tmp/prompt.txt << 'PROMPT_FOOTER'
+
+          Review this diff like a senior Java game developer who has ownership over this codebase.
+          Be picky and a perfectionist. Don't be afraid to suggest big refactors if you think they
+          are necessary. But also don't give feedback just to give feedback — every finding should
+          be tangible and actionable. If you genuinely do not find anything wrong, that is fine.
+
+          What matters:
+          - Object orientation: is the code correctly structured from an OO perspective?
+          - Scalability: is it easy to implement new things into the game?
+          - Readability: would another developer understand this code without asking the author?
+          - Multiplayer readiness: will this make it harder to eventually implement multiplayer?
+          - Correctness: are there bugs, logic errors, or edge cases being missed?
+          - Performance: anything concerning for a real-time game loop?
+
+          Respond with ONLY a JSON object in this exact format:
+          {
+            "verdict": "APPROVE",
+            "summary": "2-3 sentence overall assessment",
+            "findings": [
+              {
+                "severity": "minor",
+                "file": "path/to/file.java",
+                "line": 42,
+                "description": "what the issue is and how to fix it"
+              }
+            ],
+            "multiplayer_concerns": "any concerns about future multiplayer support, or null"
+          }
+
+          verdict must be exactly one of: "APPROVE", "REQUEST_CHANGES"
+          severity must be exactly one of: "critical", "major", "minor", "nit"
+
+          Rules for verdict:
+          - APPROVE if there are no critical or major findings (an empty findings list is perfectly fine)
+          - REQUEST_CHANGES if there is at least one critical or major finding
+          - A "critical" finding is a bug, security issue, or data loss risk
+          - A "major" finding is a significant design flaw, architectural issue, or performance regression
+          - Minor issues and nits alone should NOT block the PR
+          - Do NOT invent findings to fill space — if the code is solid, return an empty findings list
+          PROMPT_FOOTER
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude peer review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set +e
+          cat /tmp/prompt.txt | claude -p \
+            --output-format json \
+            --max-turns 3 \
+            --model claude-sonnet-4-6 \
+            --append-system-prompt "You are a senior Java game developer with full ownership of this codebase. You are a perfectionist who cares deeply about clean architecture, object orientation, scalability, and readability. This is a 2D top-down game engine built with JavaFX and Maven. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration. Be picky, but only give feedback that is tangible and actionable. If the code is genuinely good, say so — do not invent issues. Respond ONLY with a JSON object, no markdown fences." \
+            > /tmp/review_output.json 2>/tmp/review_error.txt
+          EXIT_CODE=$?
+          set -e
+
+          echo "=== Claude exit code: $EXIT_CODE ==="
+          echo "=== stderr output ==="
+          cat /tmp/review_error.txt
+          echo "=== stdout output ==="
+          cat /tmp/review_output.json
+          echo "=== end output ==="
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::Claude Code CLI failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+      - name: Parse review verdict
+        id: verdict
+        run: |
+          python3 << 'PYEOF'
+          import json, re, os
+
+          with open("/tmp/review_output.json", "r") as f:
+              text = f.read()
+
+          review = None
+
+          def strip_fences(s):
+              """Remove markdown code fences like ```json ... ```"""
+              s = s.strip()
+              s = re.sub(r'^```\w*\n?', '', s)
+              s = re.sub(r'\n?```$', '', s)
+              return s.strip()
+
+          def try_parse(s):
+              try:
+                  return json.loads(s)
+              except (json.JSONDecodeError, TypeError):
+                  return None
+
+          # Step 1: Parse the outer Claude Code JSON envelope
+          outer = try_parse(text)
+
+          if isinstance(outer, dict) and "result" in outer:
+              # --output-format json wraps response in {"type":"result","result":"..."}
+              inner_text = strip_fences(outer["result"])
+              review = try_parse(inner_text)
+
+          # Step 2: Try parsing as array of content blocks
+          if review is None and isinstance(outer, list):
+              for block in outer:
+                  if isinstance(block, dict) and block.get("type") == "text":
+                      inner_text = strip_fences(block["text"])
+                      review = try_parse(inner_text)
+                      if review and "verdict" in review:
+                          break
+
+          # Step 3: Try direct parse (maybe it's already the review JSON)
+          if review is None:
+              review = try_parse(text)
+
+          # Step 4: Regex extraction as last resort
+          if review is None or "verdict" not in review:
+              match = re.search(r'\{[^{}]*"verdict"\s*:\s*"[^"]*"[^{}]*\}', text)
+              if not match:
+                  match = re.search(r'\{[\s\S]*"verdict"[\s\S]*\}', text)
+              if match:
+                  review = try_parse(match.group())
+
+          # Fallback
+          if review is None or "verdict" not in review:
+              review = {
+                  "verdict": "REQUEST_CHANGES",
+                  "summary": "Failed to parse review output. Blocking as a precaution.",
+                  "findings": [],
+                  "multiplayer_concerns": None
+              }
+
+          # Write parsed JSON to file for later steps
+          with open("/tmp/review_parsed.json", "w") as f:
+              json.dump(review, f)
+
+          # Write verdict to GitHub output
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"verdict={review['verdict']}\n")
+
+          print(f"Verdict: {review['verdict']}")
+          print(f"Summary: {review.get('summary', 'N/A')}")
+          if review.get("findings"):
+              for f in review["findings"]:
+                  print(f"  [{f['severity']}] {f.get('file','')}: {f['description'][:100]}")
+          PYEOF
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'PYEOF' > /tmp/comment.md
+          import json
+
+          with open("/tmp/review_parsed.json", "r") as f:
+              data = json.load(f)
+
+          verdict = data["verdict"]
+          icon = "✅" if verdict == "APPROVE" else "❌"
+          lines = []
+          lines.append(f"## {icon} Claude Peer Review: {verdict}")
+          lines.append("")
+          lines.append(f"**Summary:** {data['summary']}")
+          lines.append("")
+
+          if data.get("findings"):
+              lines.append("### Findings")
+              lines.append("")
+              severity_icons = {"critical": "🔴", "major": "🟠", "minor": "🟡", "nit": "⚪"}
+              for f in data["findings"]:
+                  sev = f["severity"]
+                  sev_icon = severity_icons.get(sev, "⚪")
+                  loc = f'{f["file"]}:{f["line"]}' if f.get("line") else f.get("file", "general")
+                  lines.append(f"- {sev_icon} **{sev.upper()}** ({loc}): {f['description']}")
+              lines.append("")
+
+          mc = data.get("multiplayer_concerns")
+          if mc and mc != "null" and mc is not None:
+              lines.append("### 🎮 Multiplayer Readiness")
+              lines.append(str(mc))
+              lines.append("")
+
+          lines.append("---")
+          lines.append("*Review by Claude Code (automated senior developer review)*")
+          print("\n".join(lines))
+          PYEOF
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body-file /tmp/comment.md \
+            --repo ${{ github.repository }}
+
+      - name: Enforce verdict
+        if: steps.verdict.outputs.verdict != 'APPROVE'
+        run: |
+          echo "::error::Claude review returned REQUEST_CHANGES. PR cannot be merged."
+          echo "Review the findings in the PR comment and address the issues."
+          exit 1
