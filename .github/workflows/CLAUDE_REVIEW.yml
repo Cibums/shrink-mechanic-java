@@ -133,8 +133,15 @@ jobs:
 
           review = None
 
+          def extract_fenced_json(s):
+              """Extract JSON from markdown code fences anywhere in the string."""
+              match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)\n?```', s)
+              if match:
+                  return match.group(1).strip()
+              return None
+
           def strip_fences(s):
-              """Remove markdown code fences like ```json ... ```"""
+              """Remove markdown code fences if they wrap the entire string."""
               s = s.strip()
               s = re.sub(r'^```\w*\n?', '', s)
               s = re.sub(r'\n?```$', '', s)
@@ -150,24 +157,42 @@ jobs:
           outer = try_parse(text)
 
           if isinstance(outer, dict) and "result" in outer:
-              # --output-format json wraps response in {"type":"result","result":"..."}
-              inner_text = strip_fences(outer["result"])
-              review = try_parse(inner_text)
+              result_text = outer["result"]
+              # First try: extract fenced JSON block from anywhere in the result
+              fenced = extract_fenced_json(result_text)
+              if fenced:
+                  review = try_parse(fenced)
+              # Second try: strip fences at boundaries
+              if review is None:
+                  review = try_parse(strip_fences(result_text))
+              # Third try: parse result directly
+              if review is None:
+                  review = try_parse(result_text)
 
           # Step 2: Try parsing as array of content blocks
           if review is None and isinstance(outer, list):
               for block in outer:
                   if isinstance(block, dict) and block.get("type") == "text":
-                      inner_text = strip_fences(block["text"])
-                      review = try_parse(inner_text)
+                      block_text = block["text"]
+                      fenced = extract_fenced_json(block_text)
+                      if fenced:
+                          review = try_parse(fenced)
+                      if review is None:
+                          review = try_parse(strip_fences(block_text))
                       if review and "verdict" in review:
                           break
 
-          # Step 3: Try direct parse (maybe it's already the review JSON)
+          # Step 3: Try direct parse
           if review is None:
               review = try_parse(text)
 
-          # Step 4: Regex extraction as last resort
+          # Step 4: Try extracting fenced JSON from raw text
+          if review is None or "verdict" not in review:
+              fenced = extract_fenced_json(text)
+              if fenced:
+                  review = try_parse(fenced)
+
+          # Step 5: Regex extraction as last resort
           if review is None or "verdict" not in review:
               match = re.search(r'\{[^{}]*"verdict"\s*:\s*"[^"]*"[^{}]*\}', text)
               if not match:
@@ -195,8 +220,8 @@ jobs:
           print(f"Verdict: {review['verdict']}")
           print(f"Summary: {review.get('summary', 'N/A')}")
           if review.get("findings"):
-              for f in review["findings"]:
-                  print(f"  [{f['severity']}] {f.get('file','')}: {f['description'][:100]}")
+              for finding in review["findings"]:
+                  print(f"  [{finding['severity']}] {finding.get('file','')}: {finding['description'][:100]}")
           PYEOF
 
       - name: Post review comment
