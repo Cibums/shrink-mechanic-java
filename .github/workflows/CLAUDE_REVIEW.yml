@@ -116,10 +116,10 @@ jobs:
 
           with open("/tmp/review_output.json", "w") as f:
               f.write(message.content[0].text)
+          PYEOF
 
           echo "Raw output:"
           cat /tmp/review_output.json
-          PYEOF
 
       - name: Parse review verdict
         id: verdict
