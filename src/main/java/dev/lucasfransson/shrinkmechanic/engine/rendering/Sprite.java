@@ -28,7 +28,7 @@ public class Sprite {
 							return size() > TINT_CACHE_MAX_SIZE;
 						}
 					});
-	private static final Image DEFAULT_IMAGE = new Image("default.png");
+	public static final Image DEFAULT_IMAGE = new Image("default.png");
 
 	private final List<Image> variants;
 	private Image texture;
@@ -46,6 +46,7 @@ public class Sprite {
 	private boolean looping = true;
 
 	private Color tint;
+	private double opacity = 1.0;
 
 	public Sprite(Image texture) {
 		this.variants = List.of(texture);
@@ -288,5 +289,13 @@ public class Sprite {
 			}
 			return result;
 		});
+	}
+
+	public void setOpacity(double opacity) {
+		this.opacity = Math.clamp(opacity, 0.0, 1.0);
+	}
+
+	public double getOpacity() {
+		return opacity;
 	}
 }

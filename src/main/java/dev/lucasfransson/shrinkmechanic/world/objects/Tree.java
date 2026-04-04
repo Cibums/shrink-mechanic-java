@@ -8,6 +8,7 @@ import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.SpriteAlignment;
 import dev.lucasfransson.shrinkmechanic.items.ItemDrop;
 import dev.lucasfransson.shrinkmechanic.items.LogItem;
+import dev.lucasfransson.shrinkmechanic.items.SaplingItem;
 
 public class Tree extends WorldObject implements IRandomizable {
 
@@ -27,7 +28,8 @@ public class Tree extends WorldObject implements IRandomizable {
 
 	@Override
 	public List<ItemDrop> getDrops() {
-		return List.of(ItemDrop.of(new LogItem(), 1, 3));
+		return List.of(ItemDrop.of(new LogItem(), 1, 3),
+				ItemDrop.of(new SaplingItem(), 0, 1));
 	}
 
 }

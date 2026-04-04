@@ -5,15 +5,19 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
+import dev.lucasfransson.shrinkmechanic.items.IPlaceableItem;
+import dev.lucasfransson.shrinkmechanic.items.Item;
+import dev.lucasfransson.shrinkmechanic.items.SaplingItem;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import dev.lucasfransson.shrinkmechanic.world.ReplacementMode;
-import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 
 public class PlayerInteraction implements ITickable {
 
 	private final InputManager input;
 	private final GameCanvas canvas;
 	private final GameWorld world;
+
+	private Item selectedItem = new SaplingItem();
 
 	public PlayerInteraction(InputManager input, GameCanvas canvas,
 			GameWorld world) {
@@ -24,11 +28,28 @@ public class PlayerInteraction implements ITickable {
 
 	@Override
 	public void update(double deltaTime) {
-		Vector2 left = input.consumeLeftClick();
-		if (left != null) {
-			Vector2Int tilePosition = canvas.screenToWorld(left);
-			world.placeWorldObject(tilePosition, new Tree(),
-					ReplacementMode.KEEP);
+
+		if (selectedItem instanceof IPlaceableItem placeableItem) {
+
+			Vector2 mousePos = input.getMousePosition();
+			Vector2Int tilePosition = null;
+
+			if (mousePos != null) {
+
+				tilePosition = canvas.screenToWorld(mousePos);
+				world.previewWorldObject(tilePosition,
+						placeableItem.createWorldObject(),
+						ReplacementMode.KEEP);
+			}
+
+			Vector2 left = input.consumeLeftClick();
+			if (left != null) {
+				tilePosition = canvas.screenToWorld(left);
+				world.placeWorldObject(tilePosition,
+						placeableItem.createWorldObject(),
+						ReplacementMode.KEEP);
+			}
+
 		}
 
 		Vector2 right = input.consumeRightClick();
@@ -36,5 +57,6 @@ public class PlayerInteraction implements ITickable {
 			Vector2Int tile = canvas.screenToWorld(right);
 			world.destroyWorldObject(tile);
 		}
+
 	}
 }

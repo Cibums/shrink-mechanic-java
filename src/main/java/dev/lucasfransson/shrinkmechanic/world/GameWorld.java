@@ -13,6 +13,7 @@ import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.objects.PreviewObject;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
 
@@ -25,6 +26,8 @@ public class GameWorld {
 	private final PerlinNoise forestNoise;
 	private final long worldSeed;
 	private final List<WorldEventListener> eventListeners = new ArrayList<>();
+
+	private PreviewObject previewObject = null;
 
 	public GameWorld(ObjectRegistry registry) {
 		this.registry = registry;
@@ -151,6 +154,23 @@ public class GameWorld {
 	private void notifyListeners(Consumer<WorldEventListener> action) {
 		for (WorldEventListener listener : eventListeners) {
 			action.accept(listener);
+		}
+	}
+
+	public void previewWorldObject(Vector2Int position, WorldObject object,
+			ReplacementMode mode) {
+
+		if (previewObject == null) {
+			previewObject = registry.instantiate(new PreviewObject());
+		}
+
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+
+		if (chunk != null) {
+			chunk.previewWorldObject(localCoord(position.x()),
+					localCoord(position.y()), object, registry, mode,
+					previewObject);
 		}
 	}
 

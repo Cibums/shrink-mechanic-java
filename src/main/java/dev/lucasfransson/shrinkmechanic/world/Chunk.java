@@ -8,6 +8,7 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
 import dev.lucasfransson.shrinkmechanic.world.objects.Flowers;
 import dev.lucasfransson.shrinkmechanic.world.objects.IRandomizable;
+import dev.lucasfransson.shrinkmechanic.world.objects.PreviewObject;
 import dev.lucasfransson.shrinkmechanic.world.objects.Rock;
 import dev.lucasfransson.shrinkmechanic.world.objects.Tree;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
@@ -109,12 +110,12 @@ public class Chunk {
 	public void placeWorldObject(int localX, int localY, WorldObject obj,
 			ObjectRegistry registry, ReplacementMode mode) {
 
-		if (tiles[localX][localY] == null
-				|| !tiles[localX][localY].canBePlacedOn()) {
+		WorldObject existing = objects[localX][localY];
+
+		if (!canPlaceWorldObjectAt(localX, localY, existing, mode)) {
 			return;
 		}
 
-		WorldObject existing = objects[localX][localY];
 		if (existing != null) {
 			switch (mode) {
 				case KEEP -> {
@@ -131,6 +132,7 @@ public class Chunk {
 				}
 			}
 		}
+
 		objects[localX][localY] = obj;
 		if (obj != null && registry != null) {
 			int wx = coord.x() * GameConfig.CHUNK_SIZE + localX;
@@ -138,6 +140,21 @@ public class Chunk {
 			obj.setPosition(new Vector2Int(wx, wy));
 			registry.instantiate(obj);
 		}
+	}
+
+	public boolean canPlaceWorldObjectAt(int localX, int localY,
+			WorldObject existing, ReplacementMode mode) {
+
+		if (tiles[localX][localY] == null
+				|| !tiles[localX][localY].canBePlacedOn()) {
+			return false;
+		}
+
+		if (existing != null && mode == ReplacementMode.KEEP) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public void placeTile(int localX, int localY, Tile tile,
@@ -186,5 +203,26 @@ public class Chunk {
 			tiles[localX][localY].destroy();
 			tiles[localX][localY] = null;
 		}
+	}
+
+	public void previewWorldObject(int localX, int localY, WorldObject obj,
+			ObjectRegistry registry, ReplacementMode mode,
+			PreviewObject previewObject) {
+		WorldObject existing = objects[localX][localY];
+
+		if (!canPlaceWorldObjectAt(localX, localY, existing, mode)) {
+			previewObject.hide();
+			return;
+		}
+
+		if (obj != null) {
+			int wx = coord.x() * GameConfig.CHUNK_SIZE + localX;
+			int wy = coord.y() * GameConfig.CHUNK_SIZE + localY;
+
+			obj.setPosition(new Vector2Int(wx, wy));
+			previewObject.setWorldObject(obj);
+			previewObject.show();
+		}
+
 	}
 }
