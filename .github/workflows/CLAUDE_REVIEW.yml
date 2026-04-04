@@ -65,11 +65,11 @@ jobs:
 
           Respond with ONLY a JSON object in this exact format:
           {
-            "verdict": "APPROVE or REQUEST_CHANGES",
+            "verdict": "APPROVE",
             "summary": "2-3 sentence overall assessment",
             "findings": [
               {
-                "severity": "critical or major or minor or nit",
+                "severity": "minor",
                 "file": "path/to/file.java",
                 "line": 42,
                 "description": "what the issue is and how to fix it"
@@ -77,6 +77,9 @@ jobs:
             ],
             "multiplayer_concerns": "any concerns about future multiplayer support, or null"
           }
+
+          verdict must be exactly one of: "APPROVE", "REQUEST_CHANGES"
+          severity must be exactly one of: "critical", "major", "minor", "nit"
 
           Rules for verdict:
           - APPROVE if there are no critical or major findings
@@ -98,7 +101,6 @@ jobs:
             --output-format json \
             --max-turns 3 \
             --model claude-sonnet-4-6 \
-            --dangerously-skip-permissions \
             --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
             > /tmp/review_output.json 2>/tmp/review_error.txt
           EXIT_CODE=$?
