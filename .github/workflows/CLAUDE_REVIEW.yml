@@ -26,32 +26,38 @@ jobs:
           fetch-depth: 0
 
       - name: Get PR diff
+        id: diff
         run: |
           git fetch origin ${{ github.base_ref }}
           git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr_diff.txt
-          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
-          echo "Changed files:"
-          cat /tmp/changed_files.txt
-          echo "Diff lines: $(wc -l < /tmp/pr_diff.txt)"
+          echo "diff_size=$(wc -l < /tmp/pr_diff.txt)" >> "$GITHUB_OUTPUT"
 
-      - name: Build review prompt
+      - name: Get changed files
+        id: files
         run: |
-          cat > /tmp/prompt.txt << 'PROMPT_HEADER'
-          Review this pull request diff as a senior developer and product owner.
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@latest
+
+      - name: Run Claude peer review
+        id: review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          DIFF=$(cat /tmp/pr_diff.txt)
+          CHANGED_FILES=$(cat /tmp/changed_files.txt)
+
+          REVIEW=$(claude --print --output-format json --max-turns 3 --model claude-sonnet-4-6 \
+            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Focus on architectural decisions, code quality, and future maintainability." \
+            "Review this pull request diff as a senior developer and product owner.
 
           Changed files:
-          PROMPT_HEADER
-
-          cat /tmp/changed_files.txt >> /tmp/prompt.txt
-
-          cat >> /tmp/prompt.txt << 'PROMPT_MIDDLE'
+          $CHANGED_FILES
 
           Diff:
-          PROMPT_MIDDLE
-
-          cat /tmp/pr_diff.txt >> /tmp/prompt.txt
-
-          cat >> /tmp/prompt.txt << 'PROMPT_FOOTER'
+          $DIFF
 
           Evaluate the following aspects:
           1. Code correctness and logic errors
@@ -65,166 +71,123 @@ jobs:
 
           Respond with ONLY a JSON object in this exact format:
           {
-            "verdict": "APPROVE or REQUEST_CHANGES",
-            "summary": "2-3 sentence overall assessment",
-            "findings": [
+            \"verdict\": \"APPROVE\" or \"REQUEST_CHANGES\",
+            \"summary\": \"2-3 sentence overall assessment\",
+            \"findings\": [
               {
-                "severity": "critical or major or minor or nit",
-                "file": "path/to/file.java",
-                "line": 42,
-                "description": "what the issue is and how to fix it"
+                \"severity\": \"critical\" or \"major\" or \"minor\" or \"nit\",
+                \"file\": \"path/to/file.java\",
+                \"line\": 42,
+                \"description\": \"what the issue is and how to fix it\"
               }
             ],
-            "multiplayer_concerns": "any concerns about future multiplayer support, or null"
+            \"multiplayer_concerns\": \"any concerns about future multiplayer support, or null\"
           }
 
           Rules for verdict:
           - APPROVE if there are no critical or major findings
           - REQUEST_CHANGES if there is at least one critical or major finding
-          - A "critical" finding is a bug, security issue, or data loss risk
-          - A "major" finding is a significant design flaw or performance regression
-          - Minor issues and nits alone should NOT block the PR
-          PROMPT_FOOTER
+          - A 'critical' finding is a bug, security issue, or data loss risk
+          - A 'major' finding is a significant design flaw or performance regression
+          - Minor issues and nits alone should NOT block the PR")
 
-      - name: Install dependencies
-        run: pip install anthropic
-
-      - name: Run Claude peer review
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          python3 << 'PYEOF'
-          import anthropic
-          import json
-
-          with open("/tmp/prompt.txt", "r") as f:
-              prompt = f.read()
-
-          client = anthropic.Anthropic(api_key="${ANTHROPIC_API_KEY}")
-
-          message = client.messages.create(
-              model="claude-3-5-sonnet-20241022",
-              max_tokens=2048,
-              messages=[
-                  {
-                      "role": "user",
-                      "content": prompt
-                  }
-              ],
-              system="You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review."
-          )
-
-          with open("/tmp/review_output.json", "w") as f:
-              f.write(message.content[0].text)
-          PYEOF
-
-          echo "Raw output:"
+          echo "$REVIEW" > /tmp/review_output.json
           cat /tmp/review_output.json
 
       - name: Parse review verdict
         id: verdict
         run: |
-          python3 << 'PYEOF'
-          import json, re, os
+          # Extract the JSON from Claude's response (handle potential text wrapping)
+          REVIEW=$(cat /tmp/review_output.json)
 
-          with open("/tmp/review_output.json", "r") as f:
-              text = f.read()
-
-          result = None
-
-          # Try direct parse
+          # Try to extract JSON if wrapped in markdown fences or other text
+          JSON=$(echo "$REVIEW" | python3 -c "
+          import sys, json, re
+          text = sys.stdin.read()
+          # Try direct parse first
           try:
-              result = json.loads(text)
+              obj = json.loads(text)
+              print(json.dumps(obj))
+              sys.exit(0)
           except json.JSONDecodeError:
               pass
-
-          # Try to find JSON inside text content blocks (output-format json wraps in array)
-          if result is None:
+          # Try to find JSON in text content blocks
+          try:
+              parsed = json.loads(text)
+              if isinstance(parsed, list):
+                  for block in parsed:
+                      if isinstance(block, dict) and block.get('type') == 'text':
+                          inner = block['text']
+                          try:
+                              obj = json.loads(inner)
+                              print(json.dumps(obj))
+                              sys.exit(0)
+                          except json.JSONDecodeError:
+                              pass
+          except json.JSONDecodeError:
+              pass
+          # Try regex extraction
+          match = re.search(r'\{[\s\S]*\"verdict\"[\s\S]*\}', text)
+          if match:
               try:
-                  parsed = json.loads(text)
-                  if isinstance(parsed, list):
-                      for block in parsed:
-                          if isinstance(block, dict) and block.get("type") == "text":
-                              try:
-                                  result = json.loads(block["text"])
-                                  break
-                              except json.JSONDecodeError:
-                                  pass
+                  obj = json.loads(match.group())
+                  print(json.dumps(obj))
+                  sys.exit(0)
               except json.JSONDecodeError:
                   pass
+          print(json.dumps({'verdict': 'REQUEST_CHANGES', 'summary': 'Failed to parse review output. Blocking as a precaution.', 'findings': [], 'multiplayer_concerns': None}))
+          ")
 
-          # Try regex extraction
-          if result is None:
-              match = re.search(r'\{[\s\S]*"verdict"[\s\S]*\}', text)
-              if match:
-                  try:
-                      result = json.loads(match.group())
-                  except json.JSONDecodeError:
-                      pass
+          VERDICT=$(echo "$JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['verdict'])")
+          SUMMARY=$(echo "$JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['summary'])")
 
-          # Fallback
-          if result is None or "verdict" not in result:
-              result = {
-                  "verdict": "REQUEST_CHANGES",
-                  "summary": "Failed to parse review output. Blocking as a precaution.",
-                  "findings": [],
-                  "multiplayer_concerns": None
-              }
-
-          # Write parsed JSON to file for later steps
-          with open("/tmp/review_parsed.json", "w") as f:
-              json.dump(result, f)
-
-          # Write verdict to GitHub output
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"verdict={result['verdict']}\n")
-
-          print(f"Verdict: {result['verdict']}")
-          print(f"Summary: {result['summary']}")
-          PYEOF
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+          echo "json<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$JSON" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Post review comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 << 'PYEOF' > /tmp/comment.md
-          import json
+          JSON='${{ steps.verdict.outputs.json }}'
 
-          with open("/tmp/review_parsed.json", "r") as f:
-              data = json.load(f)
+          COMMENT=$(python3 -c "
+          import json, sys
 
-          verdict = data["verdict"]
-          icon = "✅" if verdict == "APPROVE" else "❌"
+          data = json.loads('''${{ steps.verdict.outputs.json }}''')
+
+          verdict = data['verdict']
+          icon = '✅' if verdict == 'APPROVE' else '❌'
           lines = []
-          lines.append(f"## {icon} Claude Peer Review: {verdict}")
-          lines.append("")
-          lines.append(f"**Summary:** {data['summary']}")
-          lines.append("")
+          lines.append(f'## {icon} Claude Peer Review: {verdict}')
+          lines.append('')
+          lines.append(f'**Summary:** {data[\"summary\"]}')
+          lines.append('')
 
-          if data.get("findings"):
-              lines.append("### Findings")
-              lines.append("")
-              severity_icons = {"critical": "🔴", "major": "🟠", "minor": "🟡", "nit": "⚪"}
-              for f in data["findings"]:
-                  sev = f["severity"]
-                  sev_icon = severity_icons.get(sev, "⚪")
-                  loc = f'{f["file"]}:{f["line"]}' if f.get("line") else f.get("file", "general")
-                  lines.append(f"- {sev_icon} **{sev.upper()}** ({loc}): {f['description']}")
-              lines.append("")
+          if data.get('findings'):
+              lines.append('### Findings')
+              lines.append('')
+              severity_icons = {'critical': '🔴', 'major': '🟠', 'minor': '🟡', 'nit': '⚪'}
+              for f in data['findings']:
+                  sev = f['severity']
+                  icon = severity_icons.get(sev, '⚪')
+                  loc = f'{f[\"file\"]}:{f[\"line\"]}' if f.get('line') else f.get('file', 'general')
+                  lines.append(f'- {icon} **{sev.upper()}** ({loc}): {f[\"description\"]}')
+              lines.append('')
 
-          mc = data.get("multiplayer_concerns")
-          if mc and mc != "null" and mc is not None:
-              lines.append("### 🎮 Multiplayer Readiness")
-              lines.append(str(mc))
-              lines.append("")
+          if data.get('multiplayer_concerns') and data['multiplayer_concerns'] != 'null':
+              lines.append('### 🎮 Multiplayer Readiness')
+              lines.append(data['multiplayer_concerns'])
+              lines.append('')
 
-          lines.append("---")
-          lines.append("*Review by Claude Code (automated senior developer review)*")
-          print("\n".join(lines))
-          PYEOF
+          lines.append('---')
+          lines.append('*Review by Claude Code (automated senior developer review)*')
+          print('\n'.join(lines))
+          ")
 
           gh pr comment ${{ github.event.pull_request.number }} \
-            --body-file /tmp/comment.md \
+            --body "$COMMENT" \
             --repo ${{ github.repository }}
 
       - name: Enforce verdict
