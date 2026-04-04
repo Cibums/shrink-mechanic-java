@@ -154,4 +154,15 @@ public class GameWorld {
 		}
 	}
 
+	public boolean canPlaceWorldObjectAt(Vector2Int position,
+			ReplacementMode mode) {
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+		if (chunk == null) {
+			return false;
+		}
+		return chunk.canPlaceWorldObjectAt(localCoord(position.x()),
+				localCoord(position.y()), mode);
+	}
+
 }

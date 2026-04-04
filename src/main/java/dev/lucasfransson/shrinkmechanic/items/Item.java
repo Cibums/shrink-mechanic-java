@@ -2,7 +2,7 @@ package dev.lucasfransson.shrinkmechanic.items;
 
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 
-public class Item {
+public abstract class Item {
 
 	private final Sprite sprite;
 
@@ -14,4 +14,5 @@ public class Item {
 		return sprite;
 	}
 
+	public abstract String getName();
 }

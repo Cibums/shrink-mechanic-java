@@ -46,6 +46,11 @@ public class Sprite {
 	private boolean looping = true;
 
 	private Color tint;
+	private double opacity = 1.0;
+
+	public Sprite() {
+		this(DEFAULT_IMAGE);
+	}
 
 	public Sprite(Image texture) {
 		this.variants = List.of(texture);
@@ -74,6 +79,23 @@ public class Sprite {
 	private void applyTexture(Image image) {
 		this.texture = image;
 		this.spriteSize = new Vector2(image.getWidth(), image.getHeight());
+	}
+
+	public Sprite copyAppearance() {
+		Sprite ret = new Sprite(this.getTexture());
+
+		ret.setScale(scale);
+		ret.setSpriteYOffset(spriteYOffset);
+		ret.setOffset(offset);
+		ret.setAnimation(currentAnimation);
+		ret.setFlipX(flipX);
+		ret.setLooping(looping);
+		ret.setOpacity(opacity);
+		ret.setRenderingLayer(renderingLayer);
+		ret.setSynced(synced);
+		ret.setTint(tint);
+
+		return ret;
 	}
 
 	// --- Variants ---
@@ -288,5 +310,13 @@ public class Sprite {
 			}
 			return result;
 		});
+	}
+
+	public void setOpacity(double opacity) {
+		this.opacity = Math.clamp(opacity, 0.0, 1.0);
+	}
+
+	public double getOpacity() {
+		return opacity;
 	}
 }

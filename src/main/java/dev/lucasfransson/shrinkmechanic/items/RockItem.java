@@ -8,4 +8,9 @@ public class RockItem extends Item {
 		super(new Sprite(Sprite.getTextureFromPath("/items/rock.png")));
 	}
 
+	@Override
+	public String getName() {
+		return "Rock";
+	}
+
 }

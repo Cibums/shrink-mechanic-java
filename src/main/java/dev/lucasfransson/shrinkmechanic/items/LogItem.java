@@ -8,4 +8,9 @@ public class LogItem extends Item {
 		super(new Sprite(Sprite.getTextureFromPath("/items/log.png")));
 	}
 
+	@Override
+	public String getName() {
+		return "Log";
+	}
+
 }

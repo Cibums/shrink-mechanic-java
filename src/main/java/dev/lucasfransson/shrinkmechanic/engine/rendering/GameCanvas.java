@@ -96,12 +96,16 @@ public class GameCanvas extends Canvas {
 					? Sprite.applyTint(s.getTexture(), s.getTint())
 					: s.getTexture();
 
+			gc.setGlobalAlpha(s.getOpacity());
+
 			if (s.getFlipX()) {
 				gc.drawImage(img, spriteX + spriteW, spriteY, -spriteW,
 						spriteH);
 			} else {
 				gc.drawImage(img, spriteX, spriteY, spriteW, spriteH);
 			}
+
+			gc.setGlobalAlpha(1.0);
 		}
 	}
 

@@ -109,17 +109,13 @@ public class Chunk {
 	public void placeWorldObject(int localX, int localY, WorldObject obj,
 			ObjectRegistry registry, ReplacementMode mode) {
 
-		if (tiles[localX][localY] == null
-				|| !tiles[localX][localY].canBePlacedOn()) {
+		if (!canPlaceWorldObjectAt(localX, localY, mode)) {
 			return;
 		}
 
 		WorldObject existing = objects[localX][localY];
 		if (existing != null) {
 			switch (mode) {
-				case KEEP -> {
-					return;
-				}
 				case DESTROY -> {
 					existing.onDestroy();
 					if (registry != null)
@@ -129,8 +125,11 @@ public class Chunk {
 					if (registry != null)
 						registry.destroy(existing);
 				}
+				default -> throw new IllegalArgumentException(
+						"Unexpected value: " + mode);
 			}
 		}
+
 		objects[localX][localY] = obj;
 		if (obj != null && registry != null) {
 			int wx = coord.x() * GameConfig.CHUNK_SIZE + localX;
@@ -138,6 +137,21 @@ public class Chunk {
 			obj.setPosition(new Vector2Int(wx, wy));
 			registry.instantiate(obj);
 		}
+	}
+
+	public boolean canPlaceWorldObjectAt(int localX, int localY,
+			ReplacementMode mode) {
+
+		if (tiles[localX][localY] == null
+				|| !tiles[localX][localY].canBePlacedOn()) {
+			return false;
+		}
+
+		if (objects[localX][localY] != null && mode == ReplacementMode.KEEP) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public void placeTile(int localX, int localY, Tile tile,
@@ -187,4 +201,5 @@ public class Chunk {
 			tiles[localX][localY] = null;
 		}
 	}
+
 }
