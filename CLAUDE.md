@@ -1,65 +1,35 @@
-# CLAUDE.md
+# Shrink Mechanic
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Overview
+A 2D top-down game built with **Java 21**, **JavaFX**, and **Maven**.
 
-## Build & Run Commands
+## Architecture
+The architecture follows an ECS-inspired pattern with systems (TickSystem, RenderSystem, CollisionSystem, EntitySystem, CameraSystem) coordinated by an ObjectRegistry.
 
-```bash
-mvn javafx:run       # Run the game
-mvn clean compile    # Compile only
-mvn clean package    # Build distributable jar
+- **Systems are decoupled** — each IGameSystem handles one concern and is registered via ObjectRegistry.
+- **Interface-driven composition** — objects opt into behavior via interfaces (ITickable, IRenderable, ICollidable, IManaged, ICollisionAware).
+- **Chunk-based world** — terrain is generated with Perlin noise and loaded/unloaded around the camera.
+- **GameObjects own no systems** — they are registered into systems externally; the Spawner pattern enables child object creation.
+
+## Multiplayer Plans (Not Yet Implemented)
+We plan to add **client-authoritative multiplayer** using a **listen-server model** with **Steam** integration. One player hosts and is both server and client; others connect via Steam invites.
+
+Code changes should not make multiplayer harder to implement. Watch for:
+- Hard-coded singleton assumptions (single player, single camera, single world).
+- State mutations that would need to be synchronized but aren't clearly separated.
+- Input handling tightly coupled to game logic (should be separable for remote players).
+- Use of static mutable state that can't be partitioned per-client.
+
+## Code Standards
+- Package: `dev.lucasfransson.shrinkmechanic`
+- Follow existing naming conventions — camelCase fields, PascalCase classes.
+- Prefer composition over inheritance where possible.
+- New world objects should extend WorldObject or Tile and implement IRandomizable if they need seeded variation.
+- Keep the game loop lean — avoid allocations in hot paths (update/render).
+
+## Build
 ```
-
-Java 21, JavaFX 21, Maven build system. Main class: `dev.lucasfransson.shrinkmechanic.core.Main`.
-
-## Architecture Overview
-
-This is a JavaFX 2D top-down game with a custom engine. The code is split between generic engine systems (`engine/`) and game-specific logic (`world/`, `entities/`, `items/`).
-
-### Core Loop
-
-`Main.java` wires everything together and starts `GameLoop` (extends `AnimationTimer`, ~60fps). Each frame:
-1. `CollisionSystem.updateDynamicPositions()` — reindex moving objects in spatial hash grid
-2. `TickSystem.update(deltaTime)` — call `update()` on all `ITickable` objects
-3. `GameWorld.updateChunks()` — load/unload chunks near camera
-4. `RenderSystem` collects visible sprites, advances animations
-5. `GameCanvas.render()` draws to JavaFX Canvas
-
-### ObjectRegistry Pattern
-
-Central registry that connects objects to systems. When an object is constructed, it calls `tryRegister()` on each system. Systems check `instanceof` and register if applicable. On destruction, `ObjectRegistry.destroy()` unregisters from all systems. Feature interfaces: `ITickable`, `IRenderable`, `ICollidable`, `ICollisionAware`, `IDestroyable`.
-
-### Collision System
-
-Spatial hash grid with 64-bit cell keys. Separates static and dynamic objects. `moveWithCollision(dx, dy, deltaTime)` in `Entity.java` does AABB collision: tries horizontal move, reverts if blocked, then vertical move, reverts if blocked.
-
-### World Generation
-
-`GameWorld` manages chunks (`CHUNK_SIZE=16` cells, `CHUNK_LOAD_RADIUS=1` → 3×3 chunk grid loaded). `Chunk.java` uses seeded Perlin noise for tile/object placement. `chunk.load(registry)` instantiates all objects; `chunk.unload(registry)` destroys them.
-
-### Key Constants (`GameConfig.java`)
-
-| Constant | Value | Meaning |
-|---|---|---|
-| `GRID_CELL_SIZE` | 32 | pixels per world cell |
-| `CHUNK_SIZE` | 16 | cells per chunk edge |
-| `CHUNK_LOAD_RADIUS` | 1 | chunks loaded around camera |
-
-### Entity Physics
-
-`Entity.java` has velocity + drag. `applyPhysics()` separates overlapping entities, calls `moveWithCollision()`, then applies drag. `LocalPlayer` reads WASD from `InputManager` and moves accordingly.
-
-### Rendering
-
-`RenderSystem` collects sprites from all `IRenderable` objects, sorts by `renderingLayer`. `Camera` lerps toward player, supports zoom (0.25–5.0×, Alt+scroll). `GameCanvas` converts world→screen coordinates and draws via JavaFX `GraphicsContext`.
-
-### Future features
-
-- Client-authorative multiplayer support via Steam using a listen-server model
-- Machinery and logic gates in the form of plants, animals and other organisms.
-- The player should be able to package a region in the world, so that this region fits into one tile. The packages should be able to keep have machinery and logic inside them and have inputs and outputs
-- A compilation system described in `component_compilation_system.md`
-
-### How to use this file
-
-Update this file whenever information that might be relevant for Claude Code to remember is mentioned.
+mvn compile        # compile
+mvn package        # build jar
+mvn javafx:run     # run the game
+```

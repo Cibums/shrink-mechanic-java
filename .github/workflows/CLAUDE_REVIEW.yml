@@ -1,0 +1,198 @@
+name: "Claude Peer Review"
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr_diff.txt
+          echo "diff_size=$(wc -l < /tmp/pr_diff.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Get changed files
+        id: files
+        run: |
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          cat /tmp/changed_files.txt
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude peer review
+        id: review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          DIFF=$(cat /tmp/pr_diff.txt)
+          CHANGED_FILES=$(cat /tmp/changed_files.txt)
+
+          REVIEW=$(claude --print --output-format json --max-turns 3 --model claude-sonnet-4-6 \
+            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
+            "Review this pull request diff as a senior developer and product owner.
+
+          Changed files:
+          $CHANGED_FILES
+
+          Diff:
+          $DIFF
+
+          Evaluate the following aspects:
+          1. Code correctness and logic errors
+          2. Architecture and design patterns (ECS-like pattern, separation of concerns)
+          3. Thread safety and concurrency (JavaFX application thread awareness)
+          4. Multiplayer readiness (will this make future networked play harder?)
+          5. Performance (tight game loop, rendering, collision detection)
+          6. Naming conventions and code clarity
+          7. Error handling and edge cases
+          8. Maven/build configuration issues
+
+          Respond with ONLY a JSON object in this exact format:
+          {
+            \"verdict\": \"APPROVE\" or \"REQUEST_CHANGES\",
+            \"summary\": \"2-3 sentence overall assessment\",
+            \"findings\": [
+              {
+                \"severity\": \"critical\" or \"major\" or \"minor\" or \"nit\",
+                \"file\": \"path/to/file.java\",
+                \"line\": 42,
+                \"description\": \"what the issue is and how to fix it\"
+              }
+            ],
+            \"multiplayer_concerns\": \"any concerns about future multiplayer support, or null\"
+          }
+
+          Rules for verdict:
+          - APPROVE if there are no critical or major findings
+          - REQUEST_CHANGES if there is at least one critical or major finding
+          - A 'critical' finding is a bug, security issue, or data loss risk
+          - A 'major' finding is a significant design flaw or performance regression
+          - Minor issues and nits alone should NOT block the PR")
+
+          echo "$REVIEW" > /tmp/review_output.json
+          cat /tmp/review_output.json
+
+      - name: Parse review verdict
+        id: verdict
+        run: |
+          # Extract the JSON from Claude's response (handle potential text wrapping)
+          REVIEW=$(cat /tmp/review_output.json)
+
+          # Try to extract JSON if wrapped in markdown fences or other text
+          JSON=$(echo "$REVIEW" | python3 -c "
+          import sys, json, re
+          text = sys.stdin.read()
+          # Try direct parse first
+          try:
+              obj = json.loads(text)
+              print(json.dumps(obj))
+              sys.exit(0)
+          except json.JSONDecodeError:
+              pass
+          # Try to find JSON in text content blocks
+          try:
+              parsed = json.loads(text)
+              if isinstance(parsed, list):
+                  for block in parsed:
+                      if isinstance(block, dict) and block.get('type') == 'text':
+                          inner = block['text']
+                          try:
+                              obj = json.loads(inner)
+                              print(json.dumps(obj))
+                              sys.exit(0)
+                          except json.JSONDecodeError:
+                              pass
+          except json.JSONDecodeError:
+              pass
+          # Try regex extraction
+          match = re.search(r'\{[\s\S]*\"verdict\"[\s\S]*\}', text)
+          if match:
+              try:
+                  obj = json.loads(match.group())
+                  print(json.dumps(obj))
+                  sys.exit(0)
+              except json.JSONDecodeError:
+                  pass
+          print(json.dumps({'verdict': 'REQUEST_CHANGES', 'summary': 'Failed to parse review output. Blocking as a precaution.', 'findings': [], 'multiplayer_concerns': None}))
+          ")
+
+          VERDICT=$(echo "$JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['verdict'])")
+          SUMMARY=$(echo "$JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['summary'])")
+
+          echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"
+          echo "json<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$JSON" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          JSON='${{ steps.verdict.outputs.json }}'
+
+          COMMENT=$(python3 -c "
+          import json, sys
+
+          data = json.loads('''${{ steps.verdict.outputs.json }}''')
+
+          verdict = data['verdict']
+          icon = '✅' if verdict == 'APPROVE' else '❌'
+          lines = []
+          lines.append(f'## {icon} Claude Peer Review: {verdict}')
+          lines.append('')
+          lines.append(f'**Summary:** {data[\"summary\"]}')
+          lines.append('')
+
+          if data.get('findings'):
+              lines.append('### Findings')
+              lines.append('')
+              severity_icons = {'critical': '🔴', 'major': '🟠', 'minor': '🟡', 'nit': '⚪'}
+              for f in data['findings']:
+                  sev = f['severity']
+                  icon = severity_icons.get(sev, '⚪')
+                  loc = f'{f[\"file\"]}:{f[\"line\"]}' if f.get('line') else f.get('file', 'general')
+                  lines.append(f'- {icon} **{sev.upper()}** ({loc}): {f[\"description\"]}')
+              lines.append('')
+
+          if data.get('multiplayer_concerns') and data['multiplayer_concerns'] != 'null':
+              lines.append('### 🎮 Multiplayer Readiness')
+              lines.append(data['multiplayer_concerns'])
+              lines.append('')
+
+          lines.append('---')
+          lines.append('*Review by Claude Code (automated senior developer review)*')
+          print('\n'.join(lines))
+          ")
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "$COMMENT" \
+            --repo ${{ github.repository }}
+
+      - name: Enforce verdict
+        if: steps.verdict.outputs.verdict != 'APPROVE'
+        run: |
+          echo "::error::Claude review returned REQUEST_CHANGES. PR cannot be merged."
+          echo "Review the findings in the PR comment and address the issues."
+          exit 1
