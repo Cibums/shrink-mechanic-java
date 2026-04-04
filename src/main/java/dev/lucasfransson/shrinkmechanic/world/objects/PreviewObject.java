@@ -37,6 +37,6 @@ public class PreviewObject implements IRenderable, IPositioned {
 
 	public void setWorldObject(WorldObject obj) {
 		this.position = obj.getPosition();
-		this.sprite = obj.getMainSprite();
+		this.sprite = obj.getMainSprite().copyAppearance();
 	}
 }

@@ -81,6 +81,23 @@ public class Sprite {
 		this.spriteSize = new Vector2(image.getWidth(), image.getHeight());
 	}
 
+	public Sprite copyAppearance() {
+		Sprite ret = new Sprite(this.getTexture());
+
+		ret.setScale(scale);
+		ret.setSpriteYOffset(spriteYOffset);
+		ret.setOffset(offset);
+		ret.setAnimation(currentAnimation);
+		ret.setFlipX(flipX);
+		ret.setLooping(looping);
+		ret.setOpacity(opacity);
+		ret.setRenderingLayer(renderingLayer);
+		ret.setSynced(synced);
+		ret.setTint(tint);
+
+		return ret;
+	}
+
 	// --- Variants ---
 
 	public void selectVariant(Random rnd) {
