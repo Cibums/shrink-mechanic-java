@@ -1,35 +1,240 @@
-# Shrink Mechanic
+name: "Claude Peer Review"
 
-## Overview
-A 2D top-down game built with **Java 21**, **JavaFX**, and **Maven**.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
-## Architecture
-The architecture follows an ECS-inspired pattern with systems (TickSystem, RenderSystem, CollisionSystem, EntitySystem, CameraSystem) coordinated by an ObjectRegistry.
+permissions:
+  contents: read
+  pull-requests: write
 
-- **Systems are decoupled** — each IGameSystem handles one concern and is registered via ObjectRegistry.
-- **Interface-driven composition** — objects opt into behavior via interfaces (ITickable, IRenderable, ICollidable, IManaged, ICollisionAware).
-- **Chunk-based world** — terrain is generated with Perlin noise and loaded/unloaded around the camera.
-- **GameObjects own no systems** — they are registered into systems externally; the Spawner pattern enables child object creation.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
-## Multiplayer Plans (Not Yet Implemented)
-We plan to add **client-authoritative multiplayer** using a **listen-server model** with **Steam** integration. One player hosts and is both server and client; others connect via Steam invites.
+jobs:
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-Code changes should not make multiplayer harder to implement. Watch for:
-- Hard-coded singleton assumptions (single player, single camera, single world).
-- State mutations that would need to be synchronized but aren't clearly separated.
-- Input handling tightly coupled to game logic (should be separable for remote players).
-- Use of static mutable state that can't be partitioned per-client.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-## Code Standards
-- Package: `dev.lucasfransson.shrinkmechanic`
-- Follow existing naming conventions — camelCase fields, PascalCase classes.
-- Prefer composition over inheritance where possible.
-- New world objects should extend WorldObject or Tile and implement IRandomizable if they need seeded variation.
-- Keep the game loop lean — avoid allocations in hot paths (update/render).
+      - name: Get PR diff
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr_diff.txt
+          git diff --name-only origin/${{ github.base_ref }}...HEAD > /tmp/changed_files.txt
+          echo "Changed files:"
+          cat /tmp/changed_files.txt
+          echo "Diff lines: $(wc -l < /tmp/pr_diff.txt)"
 
-## Build
-```
-mvn compile        # compile
-mvn package        # build jar
-mvn javafx:run     # run the game
-```
+      - name: Build review prompt
+        run: |
+          cat > /tmp/prompt.txt << 'PROMPT_HEADER'
+          Review this pull request diff as a senior developer and product owner.
+
+          Changed files:
+          PROMPT_HEADER
+
+          cat /tmp/changed_files.txt >> /tmp/prompt.txt
+
+          cat >> /tmp/prompt.txt << 'PROMPT_MIDDLE'
+
+          Diff:
+          PROMPT_MIDDLE
+
+          cat /tmp/pr_diff.txt >> /tmp/prompt.txt
+
+          cat >> /tmp/prompt.txt << 'PROMPT_FOOTER'
+
+          Evaluate the following aspects:
+          1. Code correctness and logic errors
+          2. Architecture and design patterns (ECS-like pattern, separation of concerns)
+          3. Thread safety and concurrency (JavaFX application thread awareness)
+          4. Multiplayer readiness (will this make future networked play harder?)
+          5. Performance (tight game loop, rendering, collision detection)
+          6. Naming conventions and code clarity
+          7. Error handling and edge cases
+          8. Maven/build configuration issues
+
+          Respond with ONLY a JSON object in this exact format:
+          {
+            "verdict": "APPROVE or REQUEST_CHANGES",
+            "summary": "2-3 sentence overall assessment",
+            "findings": [
+              {
+                "severity": "critical or major or minor or nit",
+                "file": "path/to/file.java",
+                "line": 42,
+                "description": "what the issue is and how to fix it"
+              }
+            ],
+            "multiplayer_concerns": "any concerns about future multiplayer support, or null"
+          }
+
+          Rules for verdict:
+          - APPROVE if there are no critical or major findings
+          - REQUEST_CHANGES if there is at least one critical or major finding
+          - A "critical" finding is a bug, security issue, or data loss risk
+          - A "major" finding is a significant design flaw or performance regression
+          - Minor issues and nits alone should NOT block the PR
+          PROMPT_FOOTER
+
+      - name: Install dependencies
+        run: pip install anthropic
+
+      - name: Run Claude peer review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import anthropic
+          import json
+          import os
+
+          api_key = os.environ.get("ANTHROPIC_API_KEY")
+          if not api_key:
+              raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+
+          with open("/tmp/prompt.txt", "r") as f:
+              prompt = f.read()
+
+          client = anthropic.Anthropic(api_key=api_key)
+
+          message = client.messages.create(
+              model="claude-3-5-sonnet-20241022",
+              max_tokens=2048,
+              messages=[
+                  {
+                      "role": "user",
+                      "content": prompt
+                  }
+              ],
+              system="You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review."
+          )
+
+          with open("/tmp/review_output.json", "w") as f:
+              f.write(message.content[0].text)
+          PYEOF
+
+          echo "Raw output:"
+          cat /tmp/review_output.json
+
+      - name: Parse review verdict
+        id: verdict
+        run: |
+          python3 << 'PYEOF'
+          import json, re, os
+
+          with open("/tmp/review_output.json", "r") as f:
+              text = f.read()
+
+          result = None
+
+          # Try direct parse
+          try:
+              result = json.loads(text)
+          except json.JSONDecodeError:
+              pass
+
+          # Try to find JSON inside text content blocks (output-format json wraps in array)
+          if result is None:
+              try:
+                  parsed = json.loads(text)
+                  if isinstance(parsed, list):
+                      for block in parsed:
+                          if isinstance(block, dict) and block.get("type") == "text":
+                              try:
+                                  result = json.loads(block["text"])
+                                  break
+                              except json.JSONDecodeError:
+                                  pass
+              except json.JSONDecodeError:
+                  pass
+
+          # Try regex extraction
+          if result is None:
+              match = re.search(r'\{[\s\S]*"verdict"[\s\S]*\}', text)
+              if match:
+                  try:
+                      result = json.loads(match.group())
+                  except json.JSONDecodeError:
+                      pass
+
+          # Fallback
+          if result is None or "verdict" not in result:
+              result = {
+                  "verdict": "REQUEST_CHANGES",
+                  "summary": "Failed to parse review output. Blocking as a precaution.",
+                  "findings": [],
+                  "multiplayer_concerns": None
+              }
+
+          # Write parsed JSON to file for later steps
+          with open("/tmp/review_parsed.json", "w") as f:
+              json.dump(result, f)
+
+          # Write verdict to GitHub output
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"verdict={result['verdict']}\n")
+
+          print(f"Verdict: {result['verdict']}")
+          print(f"Summary: {result['summary']}")
+          PYEOF
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'PYEOF' > /tmp/comment.md
+          import json
+
+          with open("/tmp/review_parsed.json", "r") as f:
+              data = json.load(f)
+
+          verdict = data["verdict"]
+          icon = "✅" if verdict == "APPROVE" else "❌"
+          lines = []
+          lines.append(f"## {icon} Claude Peer Review: {verdict}")
+          lines.append("")
+          lines.append(f"**Summary:** {data['summary']}")
+          lines.append("")
+
+          if data.get("findings"):
+              lines.append("### Findings")
+              lines.append("")
+              severity_icons = {"critical": "🔴", "major": "🟠", "minor": "🟡", "nit": "⚪"}
+              for f in data["findings"]:
+                  sev = f["severity"]
+                  sev_icon = severity_icons.get(sev, "⚪")
+                  loc = f'{f["file"]}:{f["line"]}' if f.get("line") else f.get("file", "general")
+                  lines.append(f"- {sev_icon} **{sev.upper()}** ({loc}): {f['description']}")
+              lines.append("")
+
+          mc = data.get("multiplayer_concerns")
+          if mc and mc != "null" and mc is not None:
+              lines.append("### 🎮 Multiplayer Readiness")
+              lines.append(str(mc))
+              lines.append("")
+
+          lines.append("---")
+          lines.append("*Review by Claude Code (automated senior developer review)*")
+          print("\n".join(lines))
+          PYEOF
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body-file /tmp/comment.md \
+            --repo ${{ github.repository }}
+
+      - name: Enforce verdict
+        if: steps.verdict.outputs.verdict != 'APPROVE'
+        run: |
+          echo "::error::Claude review returned REQUEST_CHANGES. PR cannot be merged."
+          echo "Review the findings in the PR comment and address the issues."
+          exit 1
