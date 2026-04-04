@@ -37,7 +37,7 @@ jobs:
       - name: Build review prompt
         run: |
           cat > /tmp/prompt.txt << 'PROMPT_HEADER'
-          Review this pull request diff as a senior developer and product owner.
+          Review this pull request diff. Here are the changed files and the diff:
 
           Changed files:
           PROMPT_HEADER
@@ -53,15 +53,18 @@ jobs:
 
           cat >> /tmp/prompt.txt << 'PROMPT_FOOTER'
 
-          Evaluate the following aspects:
-          1. Code correctness and logic errors
-          2. Architecture and design patterns (ECS-like pattern, separation of concerns)
-          3. Thread safety and concurrency (JavaFX application thread awareness)
-          4. Multiplayer readiness (will this make future networked play harder?)
-          5. Performance (tight game loop, rendering, collision detection)
-          6. Naming conventions and code clarity
-          7. Error handling and edge cases
-          8. Maven/build configuration issues
+          Review this diff like a senior Java game developer who has ownership over this codebase.
+          Be picky and a perfectionist. Don't be afraid to suggest big refactors if you think they
+          are necessary. But also don't give feedback just to give feedback — every finding should
+          be tangible and actionable. If you genuinely do not find anything wrong, that is fine.
+
+          What matters:
+          - Object orientation: is the code correctly structured from an OO perspective?
+          - Scalability: is it easy to implement new things into the game?
+          - Readability: would another developer understand this code without asking the author?
+          - Multiplayer readiness: will this make it harder to eventually implement multiplayer?
+          - Correctness: are there bugs, logic errors, or edge cases being missed?
+          - Performance: anything concerning for a real-time game loop?
 
           Respond with ONLY a JSON object in this exact format:
           {
@@ -82,11 +85,12 @@ jobs:
           severity must be exactly one of: "critical", "major", "minor", "nit"
 
           Rules for verdict:
-          - APPROVE if there are no critical or major findings
+          - APPROVE if there are no critical or major findings (an empty findings list is perfectly fine)
           - REQUEST_CHANGES if there is at least one critical or major finding
           - A "critical" finding is a bug, security issue, or data loss risk
-          - A "major" finding is a significant design flaw or performance regression
+          - A "major" finding is a significant design flaw, architectural issue, or performance regression
           - Minor issues and nits alone should NOT block the PR
+          - Do NOT invent findings to fill space — if the code is solid, return an empty findings list
           PROMPT_FOOTER
 
       - name: Install Claude Code
@@ -101,7 +105,7 @@ jobs:
             --output-format json \
             --max-turns 3 \
             --model claude-sonnet-4-6 \
-            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
+            --append-system-prompt "You are a senior Java game developer with full ownership of this codebase. You are a perfectionist who cares deeply about clean architecture, object orientation, scalability, and readability. This is a 2D top-down game engine built with JavaFX and Maven. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration. Be picky, but only give feedback that is tangible and actionable. If the code is genuinely good, say so — do not invent issues. Respond ONLY with a JSON object, no markdown fences." \
             > /tmp/review_output.json 2>/tmp/review_error.txt
           EXIT_CODE=$?
           set -e
