@@ -19,6 +19,9 @@ public class PlayerInteraction implements ITickable {
 
 	private Item selectedItem = new SaplingItem();
 
+	private Item selectedItemCache = null;
+	private Vector2Int mouseTilePositionCache = null;
+
 	public PlayerInteraction(InputManager input, GameCanvas canvas,
 			GameWorld world) {
 		this.input = input;
@@ -37,9 +40,18 @@ public class PlayerInteraction implements ITickable {
 			if (mousePos != null) {
 
 				tilePosition = canvas.screenToWorld(mousePos);
-				world.previewWorldObject(tilePosition,
-						placeableItem.createWorldObject(),
-						ReplacementMode.KEEP);
+
+				boolean updatePreview = this.selectedItem != this.selectedItemCache
+						|| mouseTilePositionCache != tilePosition;
+
+				if (updatePreview) {
+					world.previewWorldObject(tilePosition,
+							placeableItem.createWorldObject(),
+							ReplacementMode.KEEP);
+
+					this.selectedItemCache = selectedItem;
+					this.mouseTilePositionCache = tilePosition;
+				}
 			}
 
 			Vector2 left = input.consumeLeftClick();

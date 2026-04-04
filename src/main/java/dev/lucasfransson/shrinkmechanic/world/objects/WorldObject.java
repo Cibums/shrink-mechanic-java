@@ -78,8 +78,4 @@ public abstract class WorldObject extends DestroyableGameObject
 		getMainSprite().setScale(scale);
 		setSize(new Vector2(getSize().x() * scale, getSize().y() * scale));
 	}
-
-	public WorldObject clone() {
-		return this.clone();
-	}
 }
