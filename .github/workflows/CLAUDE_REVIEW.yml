@@ -99,7 +99,7 @@ jobs:
             --max-turns 3 \
             --model claude-sonnet-4-6 \
             --dangerously-skip-permissions \
-            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
+            --append-system-prompt "You are a senior Java developer with full ownership of this product: a 2D top-down game engine built with JavaFX and Maven. You are performing a peer review. Give feedback of the class structure and code from an object orianted perspective. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration, so flag anything that would make that harder. Respond ONLY with a JSON object, no markdown fences." \
             > /tmp/review_output.json 2>/tmp/review_error.txt
           EXIT_CODE=$?
           set -e
