@@ -24,7 +24,7 @@ public class PlayerInteraction implements ITickable {
 	private final GameWorld world;
 	private final ObjectRegistry registry;
 
-	private Item selectedItem = new HeartItem();
+	private Item selectedItem = new SaplingItem();
 
 	private Item selectedItemCache = null;
 	private Vector2Int mouseTilePositionCache = null;

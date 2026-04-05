@@ -3,17 +3,19 @@ package dev.lucasfransson.shrinkmechanic.world.objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.function.LongSupplier;
 
-import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
+import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 
-public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
+public abstract class SignalEmitter extends WorldObject
+		implements IHasOutputs, ITickable {
 
 	private static final double SIGNAL_DURATION = 0.5;
 
 	private int signalStrength;
-	private BiFunction<Vector2Int, Direction[], List<Map.Entry<Direction, WorldObject>>> adjacentProvider;
+	private AdjacentObjectLookup adjacentProvider;
+	private LongSupplier tickCountProvider;
 	private final List<PendingUntrigger> pendingUntriggers = new ArrayList<>();
 	private double emitRemainingTime = 0;
 
@@ -26,9 +28,16 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 		this.signalStrength = signalStrength;
 	}
 
-	public void setAdjacentProvider(
-			BiFunction<Vector2Int, Direction[], List<Map.Entry<Direction, WorldObject>>> adjacentProvider) {
+	public void setAdjacentProvider(AdjacentObjectLookup adjacentProvider) {
 		this.adjacentProvider = adjacentProvider;
+	}
+
+	public void setTickCountProvider(LongSupplier tickCountProvider) {
+		this.tickCountProvider = tickCountProvider;
+	}
+
+	protected long getTickCount() {
+		return tickCountProvider != null ? tickCountProvider.getAsLong() : 0;
 	}
 
 	public int getSignalStrength() {
@@ -116,20 +125,28 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 	}
 
 	@Override
-	public void onDestroy() {
-		flushPendingUntriggers();
-		unemit();
-		super.onDestroy();
-	}
-
-	protected void flushPendingUntriggers() {
+	public final void onDestroy() {
+		onSignalDestroy();
 		for (PendingUntrigger pending : pendingUntriggers) {
 			pending.receiver.untrigger(this);
 		}
 		pendingUntriggers.clear();
+		super.onDestroy();
 	}
 
-	protected void updateUntriggers(double deltaTime) {
+	/**
+	 * Called during onDestroy before pending untriggers are flushed and the
+	 * super chain runs. Root emitters use the default (unemit). Carriers
+	 * override to untrigger downstream with correct original sources.
+	 */
+	protected void onSignalDestroy() {
+		unemit();
+	}
+
+	@Override
+	public final void update(double deltaTime) {
+		onTick(deltaTime);
+
 		for (int i = pendingUntriggers.size() - 1; i >= 0; i--) {
 			PendingUntrigger pending = pendingUntriggers.get(i);
 			pending.remainingTime -= deltaTime;
@@ -147,6 +164,21 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 		}
 	}
 
+	/**
+	 * Called every tick before untrigger processing. Override in root
+	 * emitters for emission timing logic. No-op by default.
+	 */
+	protected void onTick(double deltaTime) {
+	}
+
+	/**
+	 * Override to return true in root emitters that schedule untriggers
+	 * for their immediate neighbors after emitting.
+	 */
+	protected boolean schedulesUntriggers() {
+		return false;
+	}
+
 	public List<Direction> getOutputs() {
 		return Direction.CARDINAL;
 	}
@@ -159,14 +191,6 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 			this.receiver = receiver;
 			this.remainingTime = remainingTime;
 		}
-	}
-
-	/**
-	 * Override to return true in root emitters that own an update loop and
-	 * call updateUntriggers(). Carriers should leave this as false.
-	 */
-	protected boolean schedulesUntriggers() {
-		return false;
 	}
 
 	public abstract void onEmit();

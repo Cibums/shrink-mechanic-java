@@ -52,6 +52,7 @@ public class Main extends Application {
 		registry.addPostInstantiateHook(obj -> {
 			if (obj instanceof SignalEmitter emitter) {
 				emitter.setAdjacentProvider(world::getAdjacentWorldObjects);
+				emitter.setTickCountProvider(tickSystem::getTickCount);
 			}
 		});
 

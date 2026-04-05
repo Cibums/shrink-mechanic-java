@@ -1,5 +1,6 @@
 package dev.lucasfransson.shrinkmechanic.world.objects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,14 +46,11 @@ public abstract class SignalCarrier extends SignalEmitter
 	}
 
 	@Override
-	public void onDestroy() {
-		for (SignalEmitter source : new java.util.ArrayList<>(triggeredBy.keySet())) {
+	protected void onSignalDestroy() {
+		for (SignalEmitter source : new ArrayList<>(triggeredBy.keySet())) {
 			unemitFrom(source);
 		}
 		triggeredBy.clear();
-		// Skip unemit() in super — we already untriggered downstream with
-		// the correct original sources above. Flush pending untriggers only.
-		flushPendingUntriggers();
 	}
 
 	public void onEmit() {

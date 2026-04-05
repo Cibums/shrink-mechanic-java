@@ -1,12 +1,13 @@
 package dev.lucasfransson.shrinkmechanic.world.objects;
 
+import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
-import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 import javafx.scene.paint.Color;
 
-public class PulsatingMushroom extends SignalEmitter implements ITickable {
+public class PulsatingMushroom extends SignalEmitter {
 
-	private final int bpm;
+	private final long emitIntervalTicks;
+	private long lastEmitTick = -1;
 
 	public PulsatingMushroom() {
 		this(5, 20);
@@ -15,23 +16,19 @@ public class PulsatingMushroom extends SignalEmitter implements ITickable {
 	public PulsatingMushroom(int signalStrength, int bpm) {
 		super(new Sprite(Sprite.getTextureFromPath("/mushroom.png")),
 				signalStrength);
-		this.bpm = bpm;
+		this.emitIntervalTicks = Math.round(
+				(double) GameConfig.TICK_RATE * 60.0 / bpm);
 	}
 
-	private double time = 0;
-
 	@Override
-	public void update(double deltaTime) {
+	protected void onTick(double deltaTime) {
+		long currentTick = getTickCount();
 
-		if (time >= 60.0 / bpm) {
-
+		if (lastEmitTick < 0
+				|| currentTick - lastEmitTick >= emitIntervalTicks) {
 			emit();
-
-			time = 0;
+			lastEmitTick = currentTick;
 		}
-
-		time += deltaTime;
-		updateUntriggers(deltaTime);
 	}
 
 	@Override
@@ -48,5 +45,4 @@ public class PulsatingMushroom extends SignalEmitter implements ITickable {
 	public void onUnemit() {
 		this.getMainSprite().clearTint();
 	}
-
 }
