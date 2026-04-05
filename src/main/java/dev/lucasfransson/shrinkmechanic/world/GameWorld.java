@@ -1,5 +1,6 @@
 package dev.lucasfransson.shrinkmechanic.world;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +14,7 @@ import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.objects.Direction;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
 
@@ -117,6 +119,37 @@ public class GameWorld {
 		}
 
 		notifyListeners(l -> l.onWorldObjectPlaced(position, object));
+	}
+
+	public WorldObject getWorldObjectAt(Vector2Int position) {
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+
+		if (chunk != null) {
+			return chunk.getObject(localCoord(position.x()),
+					localCoord(position.y()));
+		}
+
+		return null;
+	}
+
+	public List<WorldObject> getAdjecentWorldObjects(Vector2Int position) {
+		return getAdjecentWorldObjects(position, Direction.ALL);
+	}
+
+	public List<WorldObject> getAdjecentWorldObjects(Vector2Int position,
+			Direction... directions) {
+		List<WorldObject> result = new ArrayList<>();
+
+		List<Direction> expanded = Arrays.stream(directions)
+				.flatMap(d -> d.expand().stream()).toList();
+
+		for (Direction dir : expanded) {
+			Vector2Int target = position.add(dir.offset());
+			result.add(getWorldObjectAt(target));
+		}
+
+		return result;
 	}
 
 	public void placeTile(Vector2Int position, Tile tile,

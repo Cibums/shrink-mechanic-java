@@ -14,6 +14,7 @@ import dev.lucasfransson.shrinkmechanic.entities.EntitySystem;
 import dev.lucasfransson.shrinkmechanic.entities.LocalPlayer;
 import dev.lucasfransson.shrinkmechanic.entities.RemotePlayer;
 import dev.lucasfransson.shrinkmechanic.world.GameWorld;
+import dev.lucasfransson.shrinkmechanic.world.objects.SignalEmitter;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
@@ -48,6 +49,12 @@ public class Main extends Application {
 
 		GameWorld world = new GameWorld(registry);
 
+		registry.setPostInstantiateHook(obj -> {
+			if (obj instanceof SignalEmitter emitter) {
+				emitter.setAdjacentProvider(world::getAdjecentWorldObjects);
+			}
+		});
+
 		LocalPlayer player = registry.instantiate(new LocalPlayer(input));
 		Camera camera = registry.instantiate(new Camera(player, input));
 
@@ -56,7 +63,8 @@ public class Main extends Application {
 		GameCanvas canvas = new GameCanvas(stage, renderSystem, camera);
 
 		registry.instantiate(new Cursor(input, canvas));
-		registry.instantiate(new PlayerInteraction(input, canvas, world, registry));
+		registry.instantiate(
+				new PlayerInteraction(input, canvas, world, registry));
 
 		GameLoop loop = new GameLoop(canvas, tickSystem, renderSystem,
 				collisionSystem, camera, world);
