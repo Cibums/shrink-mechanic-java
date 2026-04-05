@@ -42,15 +42,15 @@ public class PlayerInteraction implements ITickable {
 	@Override
 	public void update(double deltaTime) {
 
-		if (input.isKeyHeld(KeyCode.DIGIT1)) {
+		if (input.consumeKeyPress(KeyCode.DIGIT1)) {
 			selectedItem = new SaplingItem();
 		}
 
-		if (input.isKeyHeld(KeyCode.DIGIT2)) {
+		if (input.consumeKeyPress(KeyCode.DIGIT2)) {
 			selectedItem = new HeartItem();
 		}
 
-		if (input.isKeyHeld(KeyCode.DIGIT3)) {
+		if (input.consumeKeyPress(KeyCode.DIGIT3)) {
 			selectedItem = new CableItem();
 		}
 

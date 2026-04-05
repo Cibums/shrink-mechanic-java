@@ -133,20 +133,24 @@ public class GameWorld {
 		return null;
 	}
 
-	public List<WorldObject> getAdjecentWorldObjects(Vector2Int position) {
-		return getAdjecentWorldObjects(position, Direction.ALL);
+	public List<Map.Entry<Direction, WorldObject>> getAdjacentWorldObjects(
+			Vector2Int position) {
+		return getAdjacentWorldObjects(position, Direction.ALL);
 	}
 
-	public List<WorldObject> getAdjecentWorldObjects(Vector2Int position,
-			Direction... directions) {
-		List<WorldObject> result = new ArrayList<>();
+	public List<Map.Entry<Direction, WorldObject>> getAdjacentWorldObjects(
+			Vector2Int position, Direction... directions) {
+		List<Map.Entry<Direction, WorldObject>> result = new ArrayList<>();
 
 		List<Direction> expanded = Arrays.stream(directions)
 				.flatMap(d -> d.expand().stream()).toList();
 
 		for (Direction dir : expanded) {
 			Vector2Int target = position.add(dir.offset());
-			result.add(getWorldObjectAt(target));
+			WorldObject obj = getWorldObjectAt(target);
+			if (obj != null) {
+				result.add(Map.entry(dir, obj));
+			}
 		}
 
 		return result;

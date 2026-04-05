@@ -49,9 +49,9 @@ public class Main extends Application {
 
 		GameWorld world = new GameWorld(registry);
 
-		registry.setPostInstantiateHook(obj -> {
+		registry.addPostInstantiateHook(obj -> {
 			if (obj instanceof SignalEmitter emitter) {
-				emitter.setAdjacentProvider(world::getAdjecentWorldObjects);
+				emitter.setAdjacentProvider(world::getAdjacentWorldObjects);
 			}
 		});
 

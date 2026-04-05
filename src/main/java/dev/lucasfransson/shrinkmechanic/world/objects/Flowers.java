@@ -13,7 +13,7 @@ import javafx.scene.paint.Color;
 public class Flowers extends WorldObject
 		implements
 			IRandomizable,
-			ISignalReciever {
+			ISignalReceiver {
 
 	private static final Color[] COLORS = {Color.web("#D4A940"),
 			Color.web("#8B6DB0"), Color.web("#C75D6E")};

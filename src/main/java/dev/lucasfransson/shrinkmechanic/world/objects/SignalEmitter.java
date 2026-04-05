@@ -2,6 +2,7 @@ package dev.lucasfransson.shrinkmechanic.world.objects;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
@@ -13,7 +14,7 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 	private static final double SIGNAL_DURATION = 0.5;
 
 	private int signalStrength;
-	private BiFunction<Vector2Int, Direction[], List<WorldObject>> adjacentProvider;
+	private BiFunction<Vector2Int, Direction[], List<Map.Entry<Direction, WorldObject>>> adjacentProvider;
 	private final List<PendingUntrigger> pendingUntriggers = new ArrayList<>();
 	private double emitRemainingTime = 0;
 
@@ -27,7 +28,7 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 	}
 
 	public void setAdjacentProvider(
-			BiFunction<Vector2Int, Direction[], List<WorldObject>> adjacentProvider) {
+			BiFunction<Vector2Int, Direction[], List<Map.Entry<Direction, WorldObject>>> adjacentProvider) {
 		this.adjacentProvider = adjacentProvider;
 	}
 
@@ -62,17 +63,16 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 		List<Direction> expanded = getOutputs().stream()
 				.flatMap(d -> d.expand().stream()).toList();
 
-		List<WorldObject> neighbors = adjacentProvider.apply(getGridPosition(),
-				expanded.toArray(Direction[]::new));
+		List<Map.Entry<Direction, WorldObject>> neighbors =
+				adjacentProvider.apply(getGridPosition(),
+						expanded.toArray(Direction[]::new));
 
-		for (int i = 0; i < neighbors.size(); i++) {
-			WorldObject neighbor = neighbors.get(i);
-			if (neighbor instanceof ISignalReciever receiver
-					&& neighbor instanceof IHasInputs inputObj) {
+		for (Map.Entry<Direction, WorldObject> entry : neighbors) {
+			if (entry.getValue() instanceof ISignalReceiver receiver) {
 				if (signalStrength <= 0 && receiver instanceof SignalCarrier)
 					continue;
-				Direction incomingDir = expanded.get(i).opposite();
-				boolean acceptsInput = inputObj.getInputs().stream()
+				Direction incomingDir = entry.getKey().opposite();
+				boolean acceptsInput = receiver.getInputs().stream()
 						.flatMap(d -> d.expand().stream())
 						.anyMatch(d -> d == incomingDir);
 				if (acceptsInput) {
@@ -100,15 +100,14 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 		List<Direction> expanded = getOutputs().stream()
 				.flatMap(d -> d.expand().stream()).toList();
 
-		List<WorldObject> neighbors = adjacentProvider.apply(getGridPosition(),
-				expanded.toArray(Direction[]::new));
+		List<Map.Entry<Direction, WorldObject>> neighbors =
+				adjacentProvider.apply(getGridPosition(),
+						expanded.toArray(Direction[]::new));
 
-		for (int i = 0; i < neighbors.size(); i++) {
-			WorldObject neighbor = neighbors.get(i);
-			if (neighbor instanceof ISignalReciever receiver
-					&& neighbor instanceof IHasInputs inputObj) {
-				Direction incomingDir = expanded.get(i).opposite();
-				boolean acceptsInput = inputObj.getInputs().stream()
+		for (Map.Entry<Direction, WorldObject> entry : neighbors) {
+			if (entry.getValue() instanceof ISignalReceiver receiver) {
+				Direction incomingDir = entry.getKey().opposite();
+				boolean acceptsInput = receiver.getInputs().stream()
 						.flatMap(d -> d.expand().stream())
 						.anyMatch(d -> d == incomingDir);
 				if (acceptsInput) {
@@ -158,10 +157,10 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 	}
 
 	private static class PendingUntrigger {
-		final ISignalReciever receiver;
+		final ISignalReceiver receiver;
 		double remainingTime;
 
-		PendingUntrigger(ISignalReciever receiver, double remainingTime) {
+		PendingUntrigger(ISignalReceiver receiver, double remainingTime) {
 			this.receiver = receiver;
 			this.remainingTime = remainingTime;
 		}

@@ -1,16 +1,16 @@
 package dev.lucasfransson.shrinkmechanic.world.objects;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import javafx.scene.paint.Color;
 
 public abstract class SignalCarrier extends SignalEmitter
 		implements
-			ISignalReciever {
+			ISignalReceiver {
 
-	private final Set<SignalEmitter> triggeredBy = new HashSet<>();
+	private final Map<SignalEmitter, Integer> triggeredBy = new HashMap<>();
 
 	protected SignalCarrier(Sprite sprite) {
 		super(sprite);
@@ -18,8 +18,8 @@ public abstract class SignalCarrier extends SignalEmitter
 
 	@Override
 	public void trigger(SignalEmitter source, int strength) {
-		boolean isNew = triggeredBy.add(source);
-		if (!isNew && strength <= getSignalStrength())
+		Integer previous = triggeredBy.put(source, strength);
+		if (previous != null && strength <= previous)
 			return;
 
 		emit(strength, source);
@@ -27,18 +27,22 @@ public abstract class SignalCarrier extends SignalEmitter
 
 	@Override
 	public void untrigger(SignalEmitter source) {
-		if (!triggeredBy.remove(source))
+		if (triggeredBy.remove(source) == null)
 			return;
 
-		if (!triggeredBy.isEmpty())
+		if (triggeredBy.isEmpty()) {
+			unemitFrom(source);
 			return;
+		}
 
-		unemitFrom(source);
+		int maxStrength = triggeredBy.values().stream()
+				.mapToInt(Integer::intValue).max().orElse(0);
+		emit(maxStrength, source);
 	}
 
 	@Override
 	public void onDestroy() {
-		for (SignalEmitter source : triggeredBy) {
+		for (SignalEmitter source : triggeredBy.keySet()) {
 			unemitFrom(source);
 		}
 		triggeredBy.clear();
