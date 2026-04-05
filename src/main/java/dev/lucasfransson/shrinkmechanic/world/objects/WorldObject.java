@@ -20,6 +20,7 @@ public abstract class WorldObject extends DestroyableGameObject
 
 	private final List<Sprite> sprites = new ArrayList<>();
 	private Vector2 positionOffset = Vector2.zero();
+	private Vector2Int gridPosition;
 
 	protected WorldObject(Sprite sprite) {
 		sprites.add(sprite);
@@ -43,8 +44,13 @@ public abstract class WorldObject extends DestroyableGameObject
 
 	@Override
 	public void setPosition(Vector2Int position) {
+		this.gridPosition = position;
 		super.setPosition(new Vector2(position.x() + positionOffset.x(),
 				position.y() + positionOffset.y()));
+	}
+
+	public Vector2Int getGridPosition() {
+		return gridPosition;
 	}
 
 	public List<ItemDrop> getDrops() {

@@ -13,6 +13,7 @@ import dev.lucasfransson.shrinkmechanic.engine.ObjectRegistry;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2;
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.world.generation.PerlinNoise;
+import dev.lucasfransson.shrinkmechanic.world.objects.Direction;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
 import dev.lucasfransson.shrinkmechanic.world.tiles.Tile;
 
@@ -117,6 +118,39 @@ public class GameWorld {
 		}
 
 		notifyListeners(l -> l.onWorldObjectPlaced(position, object));
+	}
+
+	public WorldObject getWorldObjectAt(Vector2Int position) {
+		ChunkCoord coord = toChunkCoord(position);
+		Chunk chunk = chunks.get(coord);
+
+		if (chunk != null) {
+			return chunk.getObject(localCoord(position.x()),
+					localCoord(position.y()));
+		}
+
+		return null;
+	}
+
+	public List<Map.Entry<Direction, WorldObject>> getAdjacentWorldObjects(
+			Vector2Int position) {
+		return getAdjacentWorldObjects(position,
+				Direction.CARDINAL.toArray(Direction[]::new));
+	}
+
+	public List<Map.Entry<Direction, WorldObject>> getAdjacentWorldObjects(
+			Vector2Int position, Direction... directions) {
+		List<Map.Entry<Direction, WorldObject>> result = new ArrayList<>();
+
+		for (Direction dir : directions) {
+			Vector2Int target = position.add(dir.offset());
+			WorldObject obj = getWorldObjectAt(target);
+			if (obj != null) {
+				result.add(Map.entry(dir, obj));
+			}
+		}
+
+		return result;
 	}
 
 	public void placeTile(Vector2Int position, Tile tile,

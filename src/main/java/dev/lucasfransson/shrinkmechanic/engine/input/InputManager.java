@@ -11,6 +11,7 @@ import javafx.scene.input.MouseButton;
 public class InputManager {
 
 	private final Set<KeyCode> heldKeys = new HashSet<>();
+	private final Set<KeyCode> pressedKeys = new HashSet<>();
 	private double scrollDelta = 0;
 
 	private Vector2 leftClick = null;
@@ -19,7 +20,11 @@ public class InputManager {
 	private Vector2 mousePosition;
 
 	public void listen(Scene scene) {
-		scene.setOnKeyPressed(event -> heldKeys.add(event.getCode()));
+		scene.setOnKeyPressed(event -> {
+			if (heldKeys.add(event.getCode())) {
+				pressedKeys.add(event.getCode());
+			}
+		});
 		scene.setOnKeyReleased(event -> heldKeys.remove(event.getCode()));
 		scene.setOnMouseMoved(event -> mousePosition = new Vector2(event.getX(),
 				event.getY()));
@@ -47,6 +52,10 @@ public class InputManager {
 		Vector2 v = rightClick;
 		rightClick = null;
 		return v;
+	}
+
+	public boolean consumeKeyPress(KeyCode key) {
+		return pressedKeys.remove(key);
 	}
 
 	public boolean isKeyHeld(KeyCode key) {

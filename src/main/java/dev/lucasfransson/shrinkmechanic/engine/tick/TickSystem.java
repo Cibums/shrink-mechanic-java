@@ -9,6 +9,7 @@ import dev.lucasfransson.shrinkmechanic.engine.IGameSystem;
 public class TickSystem implements IGameSystem {
 
 	private final Set<ITickable> tickables = new LinkedHashSet<>();
+	private long tickCount = 0;
 
 	public void register(ITickable t) {
 		tickables.add(t);
@@ -31,8 +32,13 @@ public class TickSystem implements IGameSystem {
 	}
 
 	public void update(double deltaTime) {
+		tickCount++;
 		for (ITickable t : List.copyOf(tickables)) {
 			t.update(deltaTime);
 		}
+	}
+
+	public long getTickCount() {
+		return tickCount;
 	}
 }

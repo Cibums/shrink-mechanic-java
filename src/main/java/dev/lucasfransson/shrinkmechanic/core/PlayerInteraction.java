@@ -6,6 +6,8 @@ import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.input.InputManager;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.GameCanvas;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
+import dev.lucasfransson.shrinkmechanic.items.CableItem;
+import dev.lucasfransson.shrinkmechanic.items.HeartItem;
 import dev.lucasfransson.shrinkmechanic.items.IPlaceableItem;
 import dev.lucasfransson.shrinkmechanic.items.Item;
 import dev.lucasfransson.shrinkmechanic.items.SaplingItem;
@@ -13,6 +15,7 @@ import dev.lucasfransson.shrinkmechanic.world.GameWorld;
 import dev.lucasfransson.shrinkmechanic.world.ReplacementMode;
 import dev.lucasfransson.shrinkmechanic.world.objects.PreviewObject;
 import dev.lucasfransson.shrinkmechanic.world.objects.WorldObject;
+import javafx.scene.input.KeyCode;
 
 public class PlayerInteraction implements ITickable {
 
@@ -38,6 +41,18 @@ public class PlayerInteraction implements ITickable {
 
 	@Override
 	public void update(double deltaTime) {
+
+		if (input.consumeKeyPress(KeyCode.DIGIT1)) {
+			selectedItem = new SaplingItem();
+		}
+
+		if (input.consumeKeyPress(KeyCode.DIGIT2)) {
+			selectedItem = new HeartItem();
+		}
+
+		if (input.consumeKeyPress(KeyCode.DIGIT3)) {
+			selectedItem = new CableItem();
+		}
 
 		if (selectedItem instanceof IPlaceableItem placeableItem) {
 

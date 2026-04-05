@@ -300,12 +300,15 @@ public class Sprite {
 			WritableImage result = new WritableImage(w, h);
 			PixelReader reader = source.getPixelReader();
 			PixelWriter writer = result.getPixelWriter();
+			double a = tint.getOpacity();
 			for (int y = 0; y < h; y++) {
 				for (int x = 0; x < w; x++) {
 					Color p = reader.getColor(x, y);
-					writer.setColor(x, y, new Color(p.getRed() * tint.getRed(),
-							p.getGreen() * tint.getGreen(),
-							p.getBlue() * tint.getBlue(), p.getOpacity()));
+					writer.setColor(x, y, new Color(
+							p.getRed() * (1 - a) + p.getRed() * tint.getRed() * a,
+							p.getGreen() * (1 - a) + p.getGreen() * tint.getGreen() * a,
+							p.getBlue() * (1 - a) + p.getBlue() * tint.getBlue() * a,
+							p.getOpacity()));
 				}
 			}
 			return result;

@@ -201,5 +201,4 @@ public class Chunk {
 			tiles[localX][localY] = null;
 		}
 	}
-
 }
