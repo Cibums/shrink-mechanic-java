@@ -18,11 +18,15 @@ public abstract class SignalCarrier extends SignalEmitter
 
 	@Override
 	public void trigger(SignalEmitter source, int strength) {
-		Integer previous = triggeredBy.put(source, strength);
+		Integer previous = triggeredBy.get(source);
 		if (previous != null && strength <= previous)
 			return;
 
-		emit(strength, source);
+		triggeredBy.put(source, strength);
+
+		int maxStrength = triggeredBy.values().stream()
+				.mapToInt(Integer::intValue).max().orElse(0);
+		emit(maxStrength, source);
 	}
 
 	@Override
@@ -42,11 +46,13 @@ public abstract class SignalCarrier extends SignalEmitter
 
 	@Override
 	public void onDestroy() {
-		for (SignalEmitter source : triggeredBy.keySet()) {
+		for (SignalEmitter source : new java.util.ArrayList<>(triggeredBy.keySet())) {
 			unemitFrom(source);
 		}
 		triggeredBy.clear();
-		super.onDestroy();
+		// Skip unemit() in super — we already untriggered downstream with
+		// the correct original sources above. Flush pending untriggers only.
+		flushPendingUntriggers();
 	}
 
 	public void onEmit() {

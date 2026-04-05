@@ -7,7 +7,6 @@ import java.util.function.BiFunction;
 
 import dev.lucasfransson.shrinkmechanic.engine.Vector2Int;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
-import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 
 public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 
@@ -60,25 +59,21 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 		if (adjacentProvider == null || getGridPosition() == null)
 			return;
 
-		List<Direction> expanded = getOutputs().stream()
-				.flatMap(d -> d.expand().stream()).toList();
+		List<Direction> outputs = getOutputs();
 
 		List<Map.Entry<Direction, WorldObject>> neighbors =
 				adjacentProvider.apply(getGridPosition(),
-						expanded.toArray(Direction[]::new));
+						outputs.toArray(Direction[]::new));
 
 		for (Map.Entry<Direction, WorldObject> entry : neighbors) {
 			if (entry.getValue() instanceof ISignalReceiver receiver) {
 				if (signalStrength <= 0 && receiver instanceof SignalCarrier)
 					continue;
 				Direction incomingDir = entry.getKey().opposite();
-				boolean acceptsInput = receiver.getInputs().stream()
-						.flatMap(d -> d.expand().stream())
-						.anyMatch(d -> d == incomingDir);
-				if (acceptsInput) {
+				if (receiver.getInputs().contains(incomingDir)) {
 					receiver.trigger(originalSource,
 							Math.max(signalStrength - 1, 0));
-					if (this instanceof ITickable) {
+					if (schedulesUntriggers()) {
 						pendingUntriggers.add(new PendingUntrigger(receiver,
 								SIGNAL_DURATION));
 					}
@@ -97,20 +92,16 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 		if (adjacentProvider == null || getGridPosition() == null)
 			return;
 
-		List<Direction> expanded = getOutputs().stream()
-				.flatMap(d -> d.expand().stream()).toList();
+		List<Direction> outputs = getOutputs();
 
 		List<Map.Entry<Direction, WorldObject>> neighbors =
 				adjacentProvider.apply(getGridPosition(),
-						expanded.toArray(Direction[]::new));
+						outputs.toArray(Direction[]::new));
 
 		for (Map.Entry<Direction, WorldObject> entry : neighbors) {
 			if (entry.getValue() instanceof ISignalReceiver receiver) {
 				Direction incomingDir = entry.getKey().opposite();
-				boolean acceptsInput = receiver.getInputs().stream()
-						.flatMap(d -> d.expand().stream())
-						.anyMatch(d -> d == incomingDir);
-				if (acceptsInput) {
+				if (receiver.getInputs().contains(incomingDir)) {
 					receiver.untrigger(originalSource);
 				}
 			}
@@ -126,12 +117,16 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 
 	@Override
 	public void onDestroy() {
+		flushPendingUntriggers();
+		unemit();
+		super.onDestroy();
+	}
+
+	protected void flushPendingUntriggers() {
 		for (PendingUntrigger pending : pendingUntriggers) {
 			pending.receiver.untrigger(this);
 		}
 		pendingUntriggers.clear();
-		unemit();
-		super.onDestroy();
 	}
 
 	protected void updateUntriggers(double deltaTime) {
@@ -153,7 +148,7 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 	}
 
 	public List<Direction> getOutputs() {
-		return List.of(Direction.ALL);
+		return Direction.CARDINAL;
 	}
 
 	private static class PendingUntrigger {
@@ -164,6 +159,14 @@ public abstract class SignalEmitter extends WorldObject implements IHasOutputs {
 			this.receiver = receiver;
 			this.remainingTime = remainingTime;
 		}
+	}
+
+	/**
+	 * Override to return true in root emitters that own an update loop and
+	 * call updateUntriggers(). Carriers should leave this as false.
+	 */
+	protected boolean schedulesUntriggers() {
+		return false;
 	}
 
 	public abstract void onEmit();

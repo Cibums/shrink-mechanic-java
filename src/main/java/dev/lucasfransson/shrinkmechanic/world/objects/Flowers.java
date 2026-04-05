@@ -40,7 +40,7 @@ public class Flowers extends WorldObject
 
 	@Override
 	public List<Direction> getInputs() {
-		return List.of(Direction.ALL);
+		return Direction.CARDINAL;
 	}
 
 	@Override

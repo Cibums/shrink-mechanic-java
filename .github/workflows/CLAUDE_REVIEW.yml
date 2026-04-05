@@ -63,8 +63,22 @@ jobs:
           - Scalability: is it easy to implement new things into the game?
           - Readability: would another developer understand this code without asking the author?
           - Multiplayer readiness: will this make it harder to eventually implement multiplayer?
+            This is CRITICAL — we plan client-authoritative multiplayer using a listen-server model
+            with Steam integration. Every PR must be evaluated for multiplayer impact.
           - Correctness: are there bugs, logic errors, or edge cases being missed?
           - Performance: anything concerning for a real-time game loop?
+
+          IMPORTANT — Multiplayer Readiness:
+          Multiplayer readiness is NOT optional. You MUST include a "multiplayer_readiness" section
+          in your response. Evaluate every change for:
+          - Hard-coded singleton assumptions (single player, single camera, single world)
+          - State mutations that would need synchronization but aren't clearly separated
+          - Input handling tightly coupled to game logic (should be separable for remote players)
+          - Static mutable state that can't be partitioned per-client
+          - Timing driven by local deltaTime that would drift across clients
+          - Per-object mutable state that must be deterministically replicated or recomputed
+          If any multiplayer concern would require significant rework to fix later, it MUST be filed
+          as a "major" finding in the findings list — not just mentioned in multiplayer_readiness.
 
           Respond with ONLY a JSON object in this exact format:
           {
@@ -78,7 +92,7 @@ jobs:
                 "description": "what the issue is and how to fix it"
               }
             ],
-            "multiplayer_concerns": "any concerns about future multiplayer support, or null"
+            "multiplayer_readiness": "detailed assessment of multiplayer impact — always include this, never null"
           }
 
           verdict must be exactly one of: "APPROVE", "REQUEST_CHANGES"
@@ -89,6 +103,7 @@ jobs:
           - REQUEST_CHANGES if there is at least one critical or major finding
           - A "critical" finding is a bug, security issue, or data loss risk
           - A "major" finding is a significant design flaw, architectural issue, or performance regression
+          - A multiplayer concern that would require significant rework IS a "major" finding
           - Minor issues and nits alone should NOT block the PR
           - Do NOT invent findings to fill space — if the code is solid, return an empty findings list
           PROMPT_FOOTER
@@ -105,7 +120,7 @@ jobs:
             --output-format json \
             --max-turns 3 \
             --model claude-sonnet-4-6 \
-            --append-system-prompt "You are a senior Java game developer with full ownership of this codebase. You are a perfectionist who cares deeply about clean architecture, object orientation, scalability, and readability. This is a 2D top-down game engine built with JavaFX and Maven. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration. Be picky, but only give feedback that is tangible and actionable. If the code is genuinely good, say so — do not invent issues. Respond ONLY with a JSON object, no markdown fences." \
+            --append-system-prompt "You are a senior Java game developer with full ownership of this codebase. You are a perfectionist who cares deeply about clean architecture, object orientation, scalability, and readability. This is a 2D top-down game engine built with JavaFX and Maven. Future plans include client-authoritative multiplayer via a listen-server model with Steam integration. Multiplayer readiness is a FIRST-CLASS review concern — any change that would require significant rework for multiplayer must be flagged as major. Be picky, but only give feedback that is tangible and actionable. If the code is genuinely good, say so — do not invent issues. Respond ONLY with a JSON object, no markdown fences." \
             > /tmp/review_output.json 2>/tmp/review_error.txt
           EXIT_CODE=$?
           set -e
@@ -233,7 +248,7 @@ jobs:
                   "verdict": "REQUEST_CHANGES",
                   "summary": "Failed to parse review output. Blocking as a precaution.",
                   "findings": [],
-                  "multiplayer_concerns": None
+                  "multiplayer_readiness": None
               }
 
           # Write parsed JSON to file for later steps
@@ -280,7 +295,7 @@ jobs:
                   lines.append(f"- {sev_icon} **{sev.upper()}** ({loc}): {f['description']}")
               lines.append("")
 
-          mc = data.get("multiplayer_concerns")
+          mc = data.get("multiplayer_readiness") or data.get("multiplayer_concerns")
           if mc and mc != "null" and mc is not None:
               lines.append("### 🎮 Multiplayer Readiness")
               lines.append(str(mc))

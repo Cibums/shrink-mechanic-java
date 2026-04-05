@@ -35,6 +35,11 @@ public class PulsatingMushroom extends SignalEmitter implements ITickable {
 	}
 
 	@Override
+	protected boolean schedulesUntriggers() {
+		return true;
+	}
+
+	@Override
 	public void onEmit() {
 		this.getMainSprite().setTint(Color.LIME);
 	}

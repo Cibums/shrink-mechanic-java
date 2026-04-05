@@ -1,6 +1,5 @@
 package dev.lucasfransson.shrinkmechanic.world;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -135,17 +134,15 @@ public class GameWorld {
 
 	public List<Map.Entry<Direction, WorldObject>> getAdjacentWorldObjects(
 			Vector2Int position) {
-		return getAdjacentWorldObjects(position, Direction.ALL);
+		return getAdjacentWorldObjects(position,
+				Direction.CARDINAL.toArray(Direction[]::new));
 	}
 
 	public List<Map.Entry<Direction, WorldObject>> getAdjacentWorldObjects(
 			Vector2Int position, Direction... directions) {
 		List<Map.Entry<Direction, WorldObject>> result = new ArrayList<>();
 
-		List<Direction> expanded = Arrays.stream(directions)
-				.flatMap(d -> d.expand().stream()).toList();
-
-		for (Direction dir : expanded) {
+		for (Direction dir : directions) {
 			Vector2Int target = position.add(dir.offset());
 			WorldObject obj = getWorldObjectAt(target);
 			if (obj != null) {

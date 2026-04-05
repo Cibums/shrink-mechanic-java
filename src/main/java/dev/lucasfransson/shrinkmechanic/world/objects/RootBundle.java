@@ -14,7 +14,7 @@ public class RootBundle extends SignalCarrier {
 
 	@Override
 	public List<Direction> getInputs() {
-		return List.of(Direction.ALL);
+		return Direction.CARDINAL;
 	}
 
 }
