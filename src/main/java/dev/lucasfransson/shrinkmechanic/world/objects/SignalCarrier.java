@@ -40,6 +40,8 @@ public abstract class SignalCarrier extends SignalEmitter
 			return;
 		}
 
+		cascadeUntrigger(source);
+
 		int maxStrength = triggeredBy.values().stream()
 				.mapToInt(Integer::intValue).max().orElse(0);
 		emit(maxStrength, source);

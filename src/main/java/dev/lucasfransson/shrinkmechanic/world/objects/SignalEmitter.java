@@ -5,19 +5,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.LongSupplier;
 
+import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
 import dev.lucasfransson.shrinkmechanic.engine.rendering.Sprite;
 import dev.lucasfransson.shrinkmechanic.engine.tick.ITickable;
 
 public abstract class SignalEmitter extends WorldObject
 		implements IHasOutputs, ITickable {
 
-	private static final double SIGNAL_DURATION = 0.5;
+	private static final int SIGNAL_DURATION_TICKS = GameConfig.TICK_RATE / 2;
 
 	private int signalStrength;
 	private AdjacentObjectLookup adjacentProvider;
 	private LongSupplier tickCountProvider;
 	private final List<PendingUntrigger> pendingUntriggers = new ArrayList<>();
-	private double emitRemainingTime = 0;
+	private int emitRemainingTicks = 0;
 
 	protected SignalEmitter(Sprite sprite) {
 		super(sprite);
@@ -47,7 +48,7 @@ public abstract class SignalEmitter extends WorldObject
 	/**
 	 * Called by carriers to propagate a signal with the original source preserved.
 	 */
-	public void emit(int strength, SignalEmitter originalSource) {
+	protected void emit(int strength, SignalEmitter originalSource) {
 		this.signalStrength = strength;
 		emitFrom(originalSource);
 	}
@@ -57,13 +58,19 @@ public abstract class SignalEmitter extends WorldObject
 	 * Uses itself as the original source.
 	 */
 	protected void emit() {
+		if (adjacentProvider == null || tickCountProvider == null) {
+			throw new IllegalStateException(
+					"SignalEmitter requires adjacentProvider and "
+							+ "tickCountProvider to be set before emitting. "
+							+ "Ensure the post-instantiate hook has run.");
+		}
 		emitFrom(this);
 	}
 
 	private void emitFrom(SignalEmitter originalSource) {
 
 		onEmit();
-		emitRemainingTime = SIGNAL_DURATION;
+		emitRemainingTicks = SIGNAL_DURATION_TICKS;
 
 		if (adjacentProvider == null || getGridPosition() == null)
 			return;
@@ -84,7 +91,7 @@ public abstract class SignalEmitter extends WorldObject
 							Math.max(signalStrength - 1, 0));
 					if (schedulesUntriggers()) {
 						pendingUntriggers.add(new PendingUntrigger(receiver,
-								SIGNAL_DURATION));
+								SIGNAL_DURATION_TICKS));
 					}
 				}
 			}
@@ -93,11 +100,19 @@ public abstract class SignalEmitter extends WorldObject
 
 	/**
 	 * Called by carriers to propagate untrigger with the original source preserved.
+	 * Calls onUnemit() and walks the neighbor graph.
 	 */
 	protected void unemitFrom(SignalEmitter originalSource) {
-
 		onUnemit();
+		cascadeUntrigger(originalSource);
+	}
 
+	/**
+	 * Propagates untrigger to neighbors without calling onUnemit on this
+	 * emitter. Used when a source is evicted but the carrier stays active
+	 * (still has other sources).
+	 */
+	void cascadeUntrigger(SignalEmitter originalSource) {
 		if (adjacentProvider == null || getGridPosition() == null)
 			return;
 
@@ -149,16 +164,16 @@ public abstract class SignalEmitter extends WorldObject
 
 		for (int i = pendingUntriggers.size() - 1; i >= 0; i--) {
 			PendingUntrigger pending = pendingUntriggers.get(i);
-			pending.remainingTime -= deltaTime;
-			if (pending.remainingTime <= 0) {
+			pending.remainingTicks--;
+			if (pending.remainingTicks <= 0) {
 				pending.receiver.untrigger(this);
 				pendingUntriggers.remove(i);
 			}
 		}
 
-		if (emitRemainingTime > 0) {
-			emitRemainingTime -= deltaTime;
-			if (emitRemainingTime <= 0) {
+		if (emitRemainingTicks > 0) {
+			emitRemainingTicks--;
+			if (emitRemainingTicks <= 0) {
 				onUnemit();
 			}
 		}
@@ -185,11 +200,11 @@ public abstract class SignalEmitter extends WorldObject
 
 	private static class PendingUntrigger {
 		final ISignalReceiver receiver;
-		double remainingTime;
+		int remainingTicks;
 
-		PendingUntrigger(ISignalReceiver receiver, double remainingTime) {
+		PendingUntrigger(ISignalReceiver receiver, int remainingTicks) {
 			this.receiver = receiver;
-			this.remainingTime = remainingTime;
+			this.remainingTicks = remainingTicks;
 		}
 	}
 
