@@ -44,7 +44,8 @@ public class Flowers extends WorldObject
 	}
 
 	@Override
-	public void trigger(SignalEmitter source, int strength) {
+	public void trigger(SignalEmitter source, int strength,
+			Set<SignalEmitter> visited) {
 		triggeredBy.add(source);
 		this.getMainSprite().setTint(Color.LIME);
 	}

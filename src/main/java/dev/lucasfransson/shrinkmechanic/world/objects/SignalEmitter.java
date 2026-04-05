@@ -1,8 +1,10 @@
 package dev.lucasfransson.shrinkmechanic.world.objects;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.LongSupplier;
 
 import dev.lucasfransson.shrinkmechanic.engine.GameConfig;
@@ -13,6 +15,8 @@ public abstract class SignalEmitter extends WorldObject
 		implements IHasOutputs, ITickable {
 
 	private static final int SIGNAL_DURATION_TICKS = GameConfig.TICK_RATE / 2;
+	private static final Direction[] CARDINAL_ARRAY = Direction.CARDINAL
+			.toArray(Direction[]::new);
 
 	private int signalStrength;
 	private AdjacentObjectLookup adjacentProvider;
@@ -46,16 +50,20 @@ public abstract class SignalEmitter extends WorldObject
 	}
 
 	/**
-	 * Called by carriers to propagate a signal with the original source preserved.
+	 * Called by carriers to propagate a signal along the chain.
+	 * Passes {@code this} as the immediate source to downstream receivers.
+	 *
+	 * @param strength signal strength at this emitter
+	 * @param visited  per-emit visited set for cycle prevention
 	 */
-	protected void emit(int strength, SignalEmitter originalSource) {
+	protected void emit(int strength, Set<SignalEmitter> visited) {
 		this.signalStrength = strength;
-		emitFrom(originalSource);
+		emitFrom(visited);
 	}
 
 	/**
-	 * Called by the root emitter (e.g. mushroom) to start a signal chain.
-	 * Uses itself as the original source.
+	 * Called by root emitters (e.g. mushroom) to start a new signal chain.
+	 * Creates a fresh visited set and uses itself as the source.
 	 */
 	protected void emit() {
 		if (adjacentProvider == null || tickCountProvider == null) {
@@ -64,22 +72,28 @@ public abstract class SignalEmitter extends WorldObject
 							+ "tickCountProvider to be set before emitting. "
 							+ "Ensure the post-instantiate hook has run.");
 		}
-		emitFrom(this);
+		Set<SignalEmitter> visited = new HashSet<>();
+		visited.add(this);
+		emitFrom(visited);
 	}
 
-	private void emitFrom(SignalEmitter originalSource) {
+	private void emitFrom(Set<SignalEmitter> visited) {
 
 		onEmit();
-		emitRemainingTicks = SIGNAL_DURATION_TICKS;
+
+		if (schedulesUntriggers()) {
+			emitRemainingTicks = SIGNAL_DURATION_TICKS;
+		}
 
 		if (adjacentProvider == null || getGridPosition() == null)
 			return;
 
-		List<Direction> outputs = getOutputs();
+		Direction[] outputDirs = resolveOutputArray();
 
 		List<Map.Entry<Direction, WorldObject>> neighbors =
-				adjacentProvider.apply(getGridPosition(),
-						outputs.toArray(Direction[]::new));
+				adjacentProvider.apply(getGridPosition(), outputDirs);
+
+		long currentTick = getTickCount();
 
 		for (Map.Entry<Direction, WorldObject> entry : neighbors) {
 			if (entry.getValue() instanceof ISignalReceiver receiver) {
@@ -87,11 +101,11 @@ public abstract class SignalEmitter extends WorldObject
 					continue;
 				Direction incomingDir = entry.getKey().opposite();
 				if (receiver.getInputs().contains(incomingDir)) {
-					receiver.trigger(originalSource,
-							Math.max(signalStrength - 1, 0));
+					receiver.trigger(this,
+							Math.max(signalStrength - 1, 0), visited);
 					if (schedulesUntriggers()) {
 						pendingUntriggers.add(new PendingUntrigger(receiver,
-								SIGNAL_DURATION_TICKS));
+								currentTick + SIGNAL_DURATION_TICKS));
 					}
 				}
 			}
@@ -99,41 +113,41 @@ public abstract class SignalEmitter extends WorldObject
 	}
 
 	/**
-	 * Called by carriers to propagate untrigger with the original source preserved.
-	 * Calls onUnemit() and walks the neighbor graph.
+	 * Called by carriers to propagate untrigger with the immediate source
+	 * preserved. Calls onUnemit() and walks the neighbor graph.
 	 */
-	protected void unemitFrom(SignalEmitter originalSource) {
+	protected void unemitFrom(SignalEmitter immediateSource) {
 		onUnemit();
-		cascadeUntrigger(originalSource);
+		cascadeUntrigger(immediateSource);
 	}
 
 	/**
 	 * Propagates untrigger to neighbors without calling onUnemit on this
-	 * emitter. Used when a source is evicted but the carrier stays active
-	 * (still has other sources).
+	 * emitter. Used when a carrier evicts one source but still has others.
+	 *
+	 * @param immediateSource the emitter whose signal is being withdrawn
 	 */
-	void cascadeUntrigger(SignalEmitter originalSource) {
+	void cascadeUntrigger(SignalEmitter immediateSource) {
 		if (adjacentProvider == null || getGridPosition() == null)
 			return;
 
-		List<Direction> outputs = getOutputs();
+		Direction[] outputDirs = resolveOutputArray();
 
 		List<Map.Entry<Direction, WorldObject>> neighbors =
-				adjacentProvider.apply(getGridPosition(),
-						outputs.toArray(Direction[]::new));
+				adjacentProvider.apply(getGridPosition(), outputDirs);
 
 		for (Map.Entry<Direction, WorldObject> entry : neighbors) {
 			if (entry.getValue() instanceof ISignalReceiver receiver) {
 				Direction incomingDir = entry.getKey().opposite();
 				if (receiver.getInputs().contains(incomingDir)) {
-					receiver.untrigger(originalSource);
+					receiver.untrigger(immediateSource);
 				}
 			}
 		}
 	}
 
 	/**
-	 * Called by the root emitter to untrigger all neighbors using itself as source.
+	 * Called by root emitters to untrigger all neighbors using itself as source.
 	 */
 	protected void unemit() {
 		unemitFrom(this);
@@ -152,7 +166,7 @@ public abstract class SignalEmitter extends WorldObject
 	/**
 	 * Called during onDestroy before pending untriggers are flushed and the
 	 * super chain runs. Root emitters use the default (unemit). Carriers
-	 * override to untrigger downstream with correct original sources.
+	 * override to untrigger downstream with correct immediate sources.
 	 */
 	protected void onSignalDestroy() {
 		unemit();
@@ -162,16 +176,17 @@ public abstract class SignalEmitter extends WorldObject
 	public final void update(double deltaTime) {
 		onTick(deltaTime);
 
+		long currentTick = getTickCount();
+
 		for (int i = pendingUntriggers.size() - 1; i >= 0; i--) {
 			PendingUntrigger pending = pendingUntriggers.get(i);
-			pending.remainingTicks--;
-			if (pending.remainingTicks <= 0) {
+			if (currentTick >= pending.fireAtTick) {
 				pending.receiver.untrigger(this);
 				pendingUntriggers.remove(i);
 			}
 		}
 
-		if (emitRemainingTicks > 0) {
+		if (schedulesUntriggers() && emitRemainingTicks > 0) {
 			emitRemainingTicks--;
 			if (emitRemainingTicks <= 0) {
 				onUnemit();
@@ -194,17 +209,34 @@ public abstract class SignalEmitter extends WorldObject
 		return false;
 	}
 
+	@Override
 	public List<Direction> getOutputs() {
 		return Direction.CARDINAL;
 	}
 
+	/**
+	 * Returns the output directions as an array. Uses the cached
+	 * CARDINAL_ARRAY when outputs are the default CARDINAL list.
+	 */
+	private Direction[] resolveOutputArray() {
+		List<Direction> outputs = getOutputs();
+		if (outputs == Direction.CARDINAL) {
+			return CARDINAL_ARRAY;
+		}
+		return outputs.toArray(Direction[]::new);
+	}
+
+	/**
+	 * Pending untrigger scheduled by a root emitter. Uses an absolute
+	 * tick count for deterministic timing (multiplayer-safe).
+	 */
 	private static class PendingUntrigger {
 		final ISignalReceiver receiver;
-		int remainingTicks;
+		final long fireAtTick;
 
-		PendingUntrigger(ISignalReceiver receiver, int remainingTicks) {
+		PendingUntrigger(ISignalReceiver receiver, long fireAtTick) {
 			this.receiver = receiver;
-			this.remainingTicks = remainingTicks;
+			this.fireAtTick = fireAtTick;
 		}
 	}
 
